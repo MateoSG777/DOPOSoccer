@@ -1,0 +1,20 @@
+package com.doposoccer.presentation;
+
+/**
+ * What the game loop needs from the screen that shows the match.
+ */
+public interface MatchView {
+
+    /** Asks the screen to draw the current frame (safe from any thread). */
+    void refresh();
+
+    /** Tells the screen that the match is over. Called on the Swing thread. */
+    void matchOver();
+
+    /**
+     * Tells the screen that an unexpected error stopped the match. Called on the Swing thread.
+     *
+     * @param error the error that happened
+     */
+    void showError(Exception error);
+}
