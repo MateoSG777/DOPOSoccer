@@ -7,25 +7,22 @@ import com.doposoccer.domain.enums.TeamSide;
 import com.doposoccer.domain.model.Ball;
 import com.doposoccer.domain.model.Field;
 import com.doposoccer.domain.model.Player;
+
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-
-import java.util.EnumSet;
-import java.util.Set;
-
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Unit tests of KeyboardControl.
  */
 class KeyboardControlTest {
 
-    /** Fake keyboard whose active actions each test sets. */
     private FakeActions actions;
-    /** Player driven by the keyboard control. */
     private Player player;
-    /** Ball of the test (far from the player). */
     private Ball ball;
 
     /** Creates fresh objects before each test. */
@@ -72,7 +69,7 @@ class KeyboardControlTest {
         assertEquals(PlayerState.KICKING, player.getState());
     }
 
-    /** No control should do nothing. */
+    /** No control should do nothing */
     @Test
     void noControlShouldDoNothing() {
         player.setControl(new NoControl());
@@ -81,19 +78,12 @@ class KeyboardControlTest {
         assertEquals(300, player.getX(), 1e-6);
     }
 
-    /** Test action source whose active actions are set by each test. */
     private static class FakeActions implements ActionSource {
-        /** Actions currently active. */
-        private final Set<PlayerAction> active = EnumSet.noneOf(PlayerAction.class);
+        private final List<PlayerAction> active = new ArrayList<>();
 
-        /**
-         * Tells whether the test activated the action.
-         *
-         * @return true if the test activated the action
-         */
         @Override
-        public boolean isActive(PlayerAction action) {
-            return active.contains(action);
+        public List<PlayerAction> getActiveActions() {
+            return active;
         }
     }
 }

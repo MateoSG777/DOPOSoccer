@@ -7,97 +7,68 @@ import com.doposoccer.domain.match.GoalListener;
 /**
  * Goal defended by one side. The ball bounces on its crossbar, and the goal
  * notifies the match when the ball gets in. Touching the screen border above
- * the crossbar is never a goal.
+ * the crossbar is never a goal
  */
 public class Goal extends GameObject {
 
-    /** Color of the net. */
-    private static final int NET_COLOR = 0xEEEEEE;
-
-    /** Side of the player who defends this goal. */
     private final TeamSide defender;
-
-    /** Who is notified when a goal is scored. */
     private final GoalListener listener;
 
     /**
-     * Creates the goal of one side.
-     *
+     * Creates the goal of one side
      * @param defender side of the player who defends this goal
      * @param listener who is notified when a goal is scored
      */
     public Goal(TeamSide defender, GoalListener listener) {
-        super(centerXFor(defender), Field.GROUND_Y - Field.GOAL_HEIGHT / 2, Field.GOAL_DEPTH, Field.GOAL_HEIGHT);
+        super((TeamSideInfo.of(defender).borderX() + TeamSideInfo.of(defender).goalLineX()) / 2, Field.GROUND_Y - Field.GOAL_HEIGHT / 2,
+                Field.GOAL_DEPTH, Field.GOAL_HEIGHT);
         this.defender = defender;
         this.listener = listener;
     }
 
     /**
-     * Computes where the goal of a side is placed.
-     *
-     * @param defender side of the player who defends the goal
-     * @return x of the goal center
-     */
-    private static double centerXFor(TeamSide defender) {
-        if (defender == TeamSide.LEFT) {
-            return Field.GOAL_DEPTH / 2;
-        }
-        return Field.WIDTH - Field.GOAL_DEPTH / 2;
-    }
-
-    /**
-     * Goals do not move.
-     *
+     * Goals do not move
      * @param dt seconds elapsed since the last frame
      */
     @Override
     public void update(double dt) {
-        // A goal is static.
     }
 
     /**
-     * Bounces the ball on the crossbar and reports a goal if the ball got in.
-     *
+     * Bounces the ball on the crossbar and reports a goal if the ball got in
      * @param ball the ball of the match
      */
     @Override
     public void checkCollision(Ball ball) {
         ball.bounceOffRect(getLeft(), Field.crossbarY() - Field.CROSSBAR_THICKNESS, getRight(), Field.crossbarY());
         if (contains(ball)) {
-            listener.goalScored(defender.opponent());
+            listener.goalScored(TeamSideInfo.of(defender).opponent());
         }
     }
 
     /**
-     * A goal counts when the ball completely crossed the goal line below the crossbar.
-     *
+     * A goal counts when the ball completely crossed the goal line below the crossbar
      * @param ball the ball of the match
      * @return true if the ball is inside this goal
      */
     public boolean contains(Ball ball) {
         boolean belowCrossbar = ball.getTop() >= Field.crossbarY();
-        boolean insideLeftGoal = ball.getRight() <= getRight();
-        boolean insideRightGoal = ball.getLeft() >= getLeft();
-        if (defender == TeamSide.LEFT) {
-            return belowCrossbar && insideLeftGoal;
-        }
-        return belowCrossbar && insideRightGoal;
+        boolean crossedLine = TeamSideInfo.of(defender).getDirection() * (TeamSideInfo.of(defender).goalLineX() - ball.getX()) >= ball.getRadius();
+        return belowCrossbar && crossedLine;
     }
 
     /**
-     * Returns the description of the goal to draw it (the right goal is mirrored).
-     *
-     * @return description of the goal to draw it (the right goal is mirrored)
+     * Returns the description of the goal to draw it
+     * @return description of the goal to draw it
      */
     @Override
     public RenderState getRenderState() {
-        return new RenderState(Figure.GOAL, "goal", "", x, y, width, height, 0,
-                defender == TeamSide.RIGHT, NET_COLOR);
+        return new RenderState(Figure.GOAL, "goal", x, y, width, height, 0,
+                TeamSideInfo.of(defender).getDirection() < 0);
     }
 
     /**
-     * Returns the side of the player who defends this goal.
-     *
+     * Returns the side of the player who defends this goal
      * @return side of the player who defends this goal
      */
     public TeamSide getDefender() {

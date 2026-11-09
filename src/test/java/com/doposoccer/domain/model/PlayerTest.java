@@ -3,9 +3,9 @@ package com.doposoccer.domain.model;
 import com.doposoccer.domain.enums.Country;
 import com.doposoccer.domain.enums.PlayerState;
 import com.doposoccer.domain.enums.TeamSide;
+
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -15,14 +15,10 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  */
 class PlayerTest {
 
-    /** Tolerance to compare doubles. */
     private static final double DELTA = 1e-6;
-    /** y of a player standing on the grass. */
     private static final double STANDING_Y = Field.GROUND_Y - Player.HEIGHT / 2;
 
-    /** Player 1 standing on the ground. */
     private Player left;
-    /** Player 2 standing on the ground. */
     private Player right;
 
     /** Creates fresh objects before each test. */
@@ -45,7 +41,7 @@ class PlayerTest {
     /** Should move right. */
     @Test
     void shouldMoveRight() {
-        left.moveRight();
+        left.move(1);
         left.update(0.1);
         assertEquals(300 + Player.BASE_SPEED * 0.1, left.getX(), DELTA);
         assertEquals(PlayerState.WALKING, left.getState());
@@ -54,7 +50,7 @@ class PlayerTest {
     /** Should move left. */
     @Test
     void shouldMoveLeft() {
-        left.moveLeft();
+        left.move(-1);
         left.update(0.1);
         assertEquals(300 - Player.BASE_SPEED * 0.1, left.getX(), DELTA);
     }
@@ -63,7 +59,7 @@ class PlayerTest {
     @Test
     void shouldNotLeaveTheField() {
         for (int i = 0; i < 300; i++) {
-            left.moveLeft();
+            left.move(-1);
             left.update(0.02);
         }
         assertEquals(0, left.getLeft(), DELTA);

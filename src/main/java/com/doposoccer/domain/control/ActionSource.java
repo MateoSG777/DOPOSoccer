@@ -1,18 +1,16 @@
 package com.doposoccer.domain.control;
-
 import com.doposoccer.domain.enums.PlayerAction;
+import java.util.List;
 
 /**
  * Source of actions of a human player. The presentation implements it by
- * reading the keyboard, so the domain knows nothing about keys or java.awt.
+ * reading the keyboard
  */
 public interface ActionSource {
 
     /**
-     * Tells whether the player is requesting an action.
-     *
-     * @param action action to query
-     * @return true if the player is requesting that action right now
+     * Returns the actions the player is requesting at the moment
+     * @return the active actions, possibly empty
      */
-    boolean isActive(PlayerAction action);
+    List<PlayerAction> getActiveActions();
 }

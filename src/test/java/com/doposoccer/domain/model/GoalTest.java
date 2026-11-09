@@ -2,9 +2,9 @@ package com.doposoccer.domain.model;
 
 import com.doposoccer.domain.enums.TeamSide;
 import com.doposoccer.domain.match.GoalListener;
+
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -13,11 +13,8 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  */
 class GoalTest {
 
-    /** Listener that records the goals. */
     private RecordingListener listener;
-    /** Goal defended by player 1. */
     private Goal leftGoal;
-    /** Goal defended by player 2. */
     private Goal rightGoal;
 
     /** Creates fresh objects before each test. */
@@ -90,11 +87,8 @@ class GoalTest {
         assertEquals(0, listener.goals);
     }
 
-    /** Test listener that remembers the goals it received. */
     private static class RecordingListener implements GoalListener {
-        /** Number of goals received. */
         private int goals;
-        /** Side of the last scorer. */
         private TeamSide lastScorer;
 
         /** Records the goal. */

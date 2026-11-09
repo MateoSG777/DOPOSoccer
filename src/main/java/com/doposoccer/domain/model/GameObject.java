@@ -1,9 +1,7 @@
 package com.doposoccer.domain.model;
 
 /**
- * Object on the field. Every collision revolves around the ball: each object
- * knows how to resolve its own collision with it (checkCollision), so the
- * match iterates the list of objects without asking their type (zero instanceof).
+ * Object on the field. Each object knows how to resolve its own collision with the ball.
  */
 public abstract class GameObject {
 

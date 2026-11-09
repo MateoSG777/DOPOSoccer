@@ -1,23 +1,22 @@
 package com.doposoccer.domain.model;
-
 import com.doposoccer.domain.control.ControlStrategy;
 import com.doposoccer.domain.control.NoControl;
+import com.doposoccer.domain.country.CountryInfo;
 import com.doposoccer.domain.enums.Country;
 import com.doposoccer.domain.enums.Figure;
 import com.doposoccer.domain.enums.PlayerState;
 import com.doposoccer.domain.enums.TeamSide;
+import com.doposoccer.domain.state.PlayerStateBehavior;
 
 /**
- * A player on the field. There is only one class for humans and machines:
- * who drives it is decided by its ControlStrategy (Strategy pattern).
- * A player always faces the rival goal.
+ * A player on the field, driven by its control strategy. It always faces the rival goal.
  */
 public class Player extends GameObject {
 
     /** Width of the player's bounding box. */
     public static final double WIDTH = 64;
 
-    /** Height of the player's bounding box (big head plus body). */
+    /** Height of the player's bounding box. */
     public static final double HEIGHT = 90;
 
     /** Radius of the head, used to bounce the ball. */
@@ -26,7 +25,7 @@ public class Player extends GameObject {
     /** Half the width of the body, used to bounce the ball. */
     public static final double BODY_HALF_WIDTH = 18;
 
-    /** Horizontal distance from the center to the hip of the kicking leg (towards the rival goal). */
+    /** Horizontal distance from the center to the hip of the kicking leg. */
     public static final double HIP_OFFSET_X = 26;
 
     /** Height of the foot center above the ground when the leg is at rest. */
@@ -38,7 +37,7 @@ public class Player extends GameObject {
     /** How far the foot reaches when kicking. */
     public static final double FOOT_REACH = 14;
 
-    /** Walking speed (units per second). */
+    /** Walking speed. */
     public static final double BASE_SPEED = 320;
 
     /** Initial vertical speed of a jump. */
@@ -47,10 +46,10 @@ public class Player extends GameObject {
     /** Duration of a kick in seconds. */
     public static final double KICK_DURATION = 0.25;
 
-    /** Horizontal speed given to the ball by a kick (towards the rival goal). */
+    /** Horizontal speed given to the ball by a kick. */
     public static final double KICK_SPEED_X = 750;
 
-    /** Vertical speed given to the ball by a kick (negative goes up). */
+    /** Vertical speed given to the ball by a kick. */
     public static final double KICK_SPEED_Y = -420;
 
     /** Minimum exit speed of the ball after a header. */
@@ -59,43 +58,24 @@ public class Player extends GameObject {
     /** Highest angle of the kicking leg in degrees: 0 hangs down, 90 points straight at the rival. */
     public static final double KICK_FOOT_ANGLE = 90;
 
-    /** Character chosen by the player. */
     private final Country country;
-
-    /** Side the player defends. */
     private final TeamSide side;
-
-    /** Who decides the actions of this player. */
     private ControlStrategy control;
-
-    /** Current state (idle, walking, jumping, kicking...). */
     private PlayerState state;
-
-    /** Horizontal speed. */
     private double vx;
-
-    /** Vertical speed (positive goes down). */
     private double vy;
-
-    /** Walking direction requested this frame: -1 left, 0 none, +1 right. */
     private int moveIntent;
-
-    /** True while the player stands on the grass. */
     private boolean onGround;
-
-    /** Seconds left in the current kick (0 if not kicking). */
     private double kickTimer;
-
-    /** True if the current kick already hit the ball (a kick hits only once). */
     private boolean kickApplied;
 
     /**
-     * Creates a player without control (NoControl) until one is assigned.
+     * Creates a player without control until one is assigned.
      *
      * @param country character chosen by the player
-     * @param side    side the player defends
-     * @param x       x coordinate of the center
-     * @param y       y coordinate of the center
+     * @param side side the player defends
+     * @param x x coordinate of the center
+     * @param y y coordinate of the center
      */
     public Player(Country country, TeamSide side, double x, double y) {
         super(x, y, WIDTH, HEIGHT);
@@ -106,9 +86,8 @@ public class Player extends GameObject {
     }
 
     /**
-     * Asks the control strategy which actions to perform in this frame.
-     *
-     * @param ball the ball of the match (the machine uses it to decide)
+     * Asks the control strategy which actions to perform in this frame
+     * @param ball the ball of the match
      * @param dt   seconds elapsed since the last frame
      */
     public void updateControl(Ball ball, double dt) {
@@ -116,31 +95,27 @@ public class Player extends GameObject {
         control.update(this, ball, dt);
     }
 
-    /** Requests walking to the left in this frame, if the state allows it. */
-    public void moveLeft() {
-        if (state.canMove()) {
-            moveIntent = -1;
+    /**
+     * Requests walking in this frame, if the state allows it.
+     * @param direction -1 to walk left, +1 to walk right
+     */
+    public void move(int direction) {
+        if (PlayerStateBehavior.of(state).canMove()) {
+            moveIntent = direction;
         }
     }
 
-    /** Requests walking to the right in this frame, if the state allows it. */
-    public void moveRight() {
-        if (state.canMove()) {
-            moveIntent = 1;
-        }
-    }
-
-    /** Starts a jump if the player is on the ground and the state allows it. */
+    /** Starts a jump if the player is on the ground and the state allows it */
     public void jump() {
-        if (onGround && state.canJump()) {
+        if (onGround && PlayerStateBehavior.of(state).canJump()) {
             vy = -BASE_JUMP_SPEED;
             onGround = false;
         }
     }
 
-    /** Starts a kick if the state allows it. */
+    /** Starts a kick if the state allows it */
     public void kick() {
-        if (state.canKick()) {
+        if (PlayerStateBehavior.of(state).canKick()) {
             kickTimer = KICK_DURATION;
             kickApplied = false;
             state = PlayerState.KICKING;
@@ -148,8 +123,7 @@ public class Player extends GameObject {
     }
 
     /**
-     * Moves the player, applies gravity, keeps it inside the field and updates its state.
-     *
+     * Moves the player, applies gravity, keeps it inside the field and updates its state
      * @param dt seconds elapsed since the last frame
      */
     @Override
@@ -172,11 +146,6 @@ public class Player extends GameObject {
         state = nextState();
     }
 
-    /**
-     * Returns the state that matches the current movement of the player.
-     *
-     * @return the state that matches the current movement of the player
-     */
     private PlayerState nextState() {
         if (kickTimer > 0) {
             return PlayerState.KICKING;
@@ -192,14 +161,13 @@ public class Player extends GameObject {
 
     /**
      * Kick: if the foot reaches the ball, it is pushed towards the rival goal
-     * (once per kick). Otherwise the ball bounces on the head or the body.
-     *
+     * Otherwise the ball bounces on the head or the body
      * @param ball the ball of the match
      */
     @Override
     public void checkCollision(Ball ball) {
         if (isKicking() && !kickApplied && footReaches(ball)) {
-            ball.kick(side.getDirection() * KICK_SPEED_X, KICK_SPEED_Y);
+            ball.kick(TeamSideInfo.of(side).getDirection() * KICK_SPEED_X, KICK_SPEED_Y);
             kickApplied = true;
             return;
         }
@@ -209,7 +177,6 @@ public class Player extends GameObject {
 
     /**
      * Prevents both players from overlapping: each one moves back half the overlap.
-     *
      * @param other the other player
      */
     public void separateFrom(Player other) {
@@ -229,8 +196,7 @@ public class Player extends GameObject {
     }
 
     /**
-     * Tells whether the foot can touch the ball.
-     *
+     * Tells whether the foot can touch the ball
      * @param ball the ball of the match
      * @return true if the ball is within reach of the foot
      */
@@ -240,8 +206,7 @@ public class Player extends GameObject {
     }
 
     /**
-     * Places the player at rest in the air; it falls when the match continues.
-     *
+     * Places the player at rest in the air; it falls when the match continues
      * @param x new x coordinate of the center
      * @param y new y coordinate of the center
      */
@@ -257,21 +222,19 @@ public class Player extends GameObject {
     }
 
     /**
-     * Returns the description of the player to draw it (the right player is mirrored).
-     *
-     * @return description of the player to draw it (the right player is mirrored)
+     * Returns the description of the player to draw it
+     * @return description of the player to draw it
      */
     @Override
     public RenderState getRenderState() {
-        return new RenderState(Figure.PLAYER, country.getSpriteKey(), country.getDisplayName(),
-                x, y, width, height, getLegAngle(), side.getDirection() < 0, country.getColor());
+        return new RenderState(Figure.PLAYER, CountryInfo.get(country).getSpriteKey(), x, y, width, height,
+                getLegAngle(), TeamSideInfo.of(side).getDirection() < 0);
     }
 
     /**
      * Returns the current angle of the kicking leg. During a kick the leg swings
-     * up to KICK_FOOT_ANGLE and comes back down, following half a sine wave.
-     *
-     * @return angle in degrees (0 when the leg hangs down)
+     * up to KICK_FOOT_ANGLE and comes back down, following half a sine wave
+     * @return angle in degrees
      */
     public double getLegAngle() {
         if (kickTimer <= 0) {
@@ -283,8 +246,7 @@ public class Player extends GameObject {
 
     /**
      * Computes the horizontal position of the foot center, relative to the player
-     * center and facing right. The foot moves on an arc around the hip.
-     *
+     * center and facing right. The foot moves on an arc around the hip
      * @param legAngle angle of the leg in degrees
      * @return x of the foot center relative to the player center
      */
@@ -294,8 +256,7 @@ public class Player extends GameObject {
 
     /**
      * Computes the vertical position of the foot center, relative to the player
-     * center. The foot moves on an arc around the hip.
-     *
+     * center. The foot moves on an arc around the hip
      * @param legAngle angle of the leg in degrees
      * @return y of the foot center relative to the player center
      */
@@ -305,8 +266,7 @@ public class Player extends GameObject {
     }
 
     /**
-     * Returns the x of the head center.
-     *
+     * Returns the x of the head center
      * @return x of the head center
      */
     public double getHeadX() {
@@ -314,8 +274,7 @@ public class Player extends GameObject {
     }
 
     /**
-     * Returns the y of the head center.
-     *
+     * Returns the y of the head center
      * @return y of the head center
      */
     public double getHeadY() {
@@ -323,17 +282,15 @@ public class Player extends GameObject {
     }
 
     /**
-     * Returns the x of the foot (in front of the player, towards the rival goal).
-     *
-     * @return x of the foot (in front of the player, towards the rival goal)
+     * Returns the x of the foot
+     * @return x of the foot
      */
     public double getFootX() {
-        return x + side.getDirection() * footLocalX(getLegAngle());
+        return x + TeamSideInfo.of(side).getDirection() * footLocalX(getLegAngle());
     }
 
     /**
-     * Returns the y of the foot.
-     *
+     * Returns the y of the foot
      * @return y of the foot
      */
     public double getFootY() {
@@ -341,8 +298,7 @@ public class Player extends GameObject {
     }
 
     /**
-     * Tells whether a kick is in progress.
-     *
+     * Tells whether a kick is in progress
      * @return true while a kick is in progress
      */
     public boolean isKicking() {
@@ -350,8 +306,7 @@ public class Player extends GameObject {
     }
 
     /**
-     * Tells whether the player stands on the grass.
-     *
+     * Tells whether the player stands on the grass
      * @return true while the player stands on the grass
      */
     public boolean isOnGround() {
@@ -359,8 +314,7 @@ public class Player extends GameObject {
     }
 
     /**
-     * Sets who drives this player (keyboard now, machine in version two).
-     *
+     * Sets who drives this player
      * @param control new control strategy for this player
      */
     public void setControl(ControlStrategy control) {
@@ -368,8 +322,7 @@ public class Player extends GameObject {
     }
 
     /**
-     * Returns the character chosen by the player.
-     *
+     * Returns the character chosen by the player
      * @return character chosen by the player
      */
     public Country getCountry() {
@@ -377,8 +330,7 @@ public class Player extends GameObject {
     }
 
     /**
-     * Returns the side the player defends.
-     *
+     * Returns the side the player defends
      * @return side the player defends
      */
     public TeamSide getSide() {
@@ -386,8 +338,7 @@ public class Player extends GameObject {
     }
 
     /**
-     * Returns the current state.
-     *
+     * Returns the current state
      * @return current state
      */
     public PlayerState getState() {
@@ -395,8 +346,7 @@ public class Player extends GameObject {
     }
 
     /**
-     * Returns the horizontal speed.
-     *
+     * Returns the horizontal speed
      * @return horizontal speed
      */
     public double getVx() {
@@ -404,9 +354,8 @@ public class Player extends GameObject {
     }
 
     /**
-     * Returns the vertical speed (positive goes down).
-     *
-     * @return vertical speed (positive goes down)
+     * Returns the vertical speed
+     * @return vertical speed
      */
     public double getVy() {
         return vy;

@@ -1,7 +1,6 @@
 package com.doposoccer.domain.model;
 
 import org.junit.jupiter.api.Test;
-
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -11,7 +10,6 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  */
 class BallTest {
 
-    /** Tolerance to compare doubles. */
     private static final double DELTA = 1e-6;
 
     /** Should fall by gravity. */

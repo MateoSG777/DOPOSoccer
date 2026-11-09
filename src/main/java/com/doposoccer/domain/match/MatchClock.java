@@ -1,36 +1,21 @@
 package com.doposoccer.domain.match;
 
 /**
- * Match clock. It is either a countdown (timed matches) or a stopwatch
- * without limit (goals matches).
+ * Match clock. A countdown for timed matches or a stopwatch for goals matches
+ * A stopwatch is a countdown with an infinite duration, so it never expires
  */
 public final class MatchClock {
 
-    /** Seconds in one minute, used to format the time. */
     private static final int SECONDS_PER_MINUTE = 60;
-
-    /** Marker duration meaning "no time limit". */
-    private static final double NO_LIMIT = -1;
-
-    /** Total duration in seconds, or NO_LIMIT for a stopwatch. */
     private final double durationSeconds;
-
-    /** Seconds played so far. */
     private double elapsedSeconds;
 
-    /**
-     * Creates a clock with the given duration.
-     *
-     * @param durationSeconds total duration in seconds, or NO_LIMIT
-     */
     private MatchClock(double durationSeconds) {
         this.durationSeconds = durationSeconds;
-        this.elapsedSeconds = 0;
     }
 
     /**
-     * Creates a countdown clock.
-     *
+     * Creates a countdown clock
      * @param durationSeconds total duration in seconds
      * @return a clock that expires after the given duration
      */
@@ -39,74 +24,46 @@ public final class MatchClock {
     }
 
     /**
-     * Creates a stopwatch that never expires.
-     *
+     * Creates a stopwatch that never expires
      * @return a clock without time limit
      */
     public static MatchClock stopwatch() {
-        return new MatchClock(NO_LIMIT);
+        return new MatchClock(Double.POSITIVE_INFINITY);
     }
 
     /**
-     * Advances the clock. A countdown never goes beyond its duration.
-     *
+     * Advances the clock. A countdown never goes beyond its duration
      * @param dt seconds elapsed since the last frame
      */
     public void tick(double dt) {
-        elapsedSeconds += dt;
-        if (hasLimit() && elapsedSeconds > durationSeconds) {
-            elapsedSeconds = durationSeconds;
-        }
+        elapsedSeconds = Math.min(elapsedSeconds + dt, durationSeconds);
     }
 
     /**
-     * Tells whether this clock is a countdown.
-     *
+     * Tells whether this clock is a countdown
      * @return true if this clock is a countdown
      */
     public boolean hasLimit() {
-        return durationSeconds != NO_LIMIT;
+        return !Double.isInfinite(durationSeconds);
     }
 
     /**
-     * Tells whether this is a countdown that reached zero.
-     *
-     * @return true if this is a countdown that reached zero
+     * Tells whether this is a countdown that reached zero
+     * @return true if the time is up
      */
     public boolean isExpired() {
-        return hasLimit() && elapsedSeconds >= durationSeconds;
+        return elapsedSeconds >= durationSeconds;
     }
 
     /**
-     * Returns the seconds played so far.
-     *
-     * @return seconds played so far
-     */
-    public double getElapsedSeconds() {
-        return elapsedSeconds;
-    }
-
-    /**
-     * Returns the remaining seconds for a countdown, elapsed seconds for a stopwatch.
-     *
-     * @return remaining seconds for a countdown, elapsed seconds for a stopwatch
-     */
-    public double getDisplaySeconds() {
-        if (hasLimit()) {
-            return durationSeconds - elapsedSeconds;
-        }
-        return elapsedSeconds;
-    }
-
-    /**
-     * Returns the displayed time in mm:ss format.
-     *
+     * Returns the displayed time in mm:ss format. remaining time for a countdown,
+     * elapsed time for a stopwatch
      * @return the displayed time in mm:ss format
      */
     public String format() {
-        int total = (int) Math.floor(getDisplaySeconds());
+        int total = (int) Math.floor(elapsedSeconds);
         if (hasLimit()) {
-            total = (int) Math.ceil(getDisplaySeconds());
+            total = (int) Math.ceil(durationSeconds - elapsedSeconds);
         }
         return String.format("%02d:%02d", total / SECONDS_PER_MINUTE, total % SECONDS_PER_MINUTE);
     }

@@ -1,19 +1,15 @@
 package com.doposoccer.domain.match;
-
 import com.doposoccer.domain.enums.TeamSide;
-
-import java.util.EnumMap;
+import java.util.HashMap;
 import java.util.Map;
 
 /**
- * Score of the match. It always starts 0 - 0.
+ * Score of the match. It always starts 0 - 0
  */
 public final class Scoreboard {
 
-    /** Goals scored by each side. */
-    private final Map<TeamSide, Integer> goals = new EnumMap<>(TeamSide.class);
+    private final Map<TeamSide, Integer> goals = new HashMap<>();
 
-    /** Creates a scoreboard with 0 goals for every side. */
     public Scoreboard() {
         TeamSide[] sides = TeamSide.values();
         for (int i = 0; i < sides.length; i++) {
@@ -22,8 +18,7 @@ public final class Scoreboard {
     }
 
     /**
-     * Adds one goal.
-     *
+     * Adds one goal
      * @param scorer side of the player who scored
      */
     public void addGoal(TeamSide scorer) {
@@ -31,8 +26,7 @@ public final class Scoreboard {
     }
 
     /**
-     * Returns the goals scored by one side.
-     *
+     * Returns the goals scored by one side
      * @param side side to query
      * @return goals scored by that side
      */
@@ -41,8 +35,7 @@ public final class Scoreboard {
     }
 
     /**
-     * Tells whether both sides have the same number of goals.
-     *
+     * Tells whether both sides have the same number of goals
      * @return true if both sides have the same number of goals
      */
     public boolean isTied() {
@@ -50,8 +43,6 @@ public final class Scoreboard {
     }
 
     /**
-     * Returns the highest number of goals among both sides.
-     *
      * @return the highest number of goals among both sides
      */
     public int getMaxGoals() {
@@ -59,8 +50,6 @@ public final class Scoreboard {
     }
 
     /**
-     * Returns the side that is winning; only meaningful when the score is not tied.
-     *
      * @return the side that is winning; only meaningful when the score is not tied
      */
     public TeamSide getLeader() {
@@ -68,5 +57,13 @@ public final class Scoreboard {
             return TeamSide.LEFT;
         }
         return TeamSide.RIGHT;
+    }
+
+    /**
+     * Returns a copy of the goals of each side
+     * @return goals indexed by side
+     */
+    public Map<TeamSide, Integer> copyOfGoals() {
+        return new HashMap<>(goals);
     }
 }

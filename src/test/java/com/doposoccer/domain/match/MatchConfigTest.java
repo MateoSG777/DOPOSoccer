@@ -6,9 +6,10 @@ import com.doposoccer.domain.enums.GameMode;
 import com.doposoccer.domain.enums.MatchType;
 import com.doposoccer.domain.enums.Resolution;
 import com.doposoccer.domain.enums.TeamSide;
-import org.junit.jupiter.api.Test;
 
+import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
 
@@ -20,10 +21,12 @@ class MatchConfigTest {
     /** Should create valid configuration. */
     @Test
     void shouldCreateValidConfiguration() throws DOPOSoccerException {
+        Country korea = Country.KOREA;
+        Country nigeria = Country.NIGERIA;
         MatchConfig config = new MatchConfig(GameMode.PLAYER_VS_PLAYER, Resolution.MEDIUM,
-                Country.KOREA, Country.NIGERIA, MatchType.BY_GOALS, 3);
-        assertEquals(Country.KOREA, config.getCountry(TeamSide.LEFT));
-        assertEquals(Country.NIGERIA, config.getCountry(TeamSide.RIGHT));
+                korea, nigeria, MatchType.GOALS, 3);
+        assertSame(korea, config.getCountry(TeamSide.LEFT));
+        assertSame(nigeria, config.getCountry(TeamSide.RIGHT));
         assertEquals(3, config.getTarget());
     }
 
@@ -32,7 +35,7 @@ class MatchConfigTest {
     void shouldRejectPlayerVsMachineInThisVersion() {
         try {
             new MatchConfig(GameMode.PLAYER_VS_MACHINE, Resolution.SMALL,
-                    Country.KOREA, Country.USA, MatchType.BY_TIME, 2);
+                    Country.KOREA, Country.USA, MatchType.TIMED, 2);
             fail("DOPOSoccerException was expected");
         } catch (DOPOSoccerException e) {
             assertEquals(DOPOSoccerException.MODE_NOT_AVAILABLE, e.getMessage());
@@ -44,7 +47,7 @@ class MatchConfigTest {
     void shouldRejectMissingData() {
         try {
             new MatchConfig(GameMode.PLAYER_VS_PLAYER, Resolution.SMALL,
-                    null, Country.USA, MatchType.BY_TIME, 2);
+                    null, Country.USA, MatchType.TIMED, 2);
             fail("DOPOSoccerException was expected");
         } catch (DOPOSoccerException e) {
             assertEquals(DOPOSoccerException.NULL_CONFIGURATION, e.getMessage());
@@ -56,7 +59,7 @@ class MatchConfigTest {
     void shouldRejectTargetOutOfRange() {
         try {
             new MatchConfig(GameMode.PLAYER_VS_PLAYER, Resolution.LARGE,
-                    Country.KOREA, Country.USA, MatchType.BY_GOALS, 0);
+                    Country.KOREA, Country.USA, MatchType.GOALS, 0);
             fail("DOPOSoccerException was expected");
         } catch (DOPOSoccerException e) {
             assertTrue(e.getMessage().startsWith(DOPOSoccerException.INVALID_TARGET));

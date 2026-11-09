@@ -15,7 +15,7 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <junit.version>5.10.2</junit.version>
         <jacoco.version>0.8.12</jacoco.version>
-        <main.class>com.doposoccer.presentation.DOPOSoccerGUI</main.class>
+        <main.class>com.doposoccer.DOPOSoccerGUI</main.class>
     </properties>
 
     <dependencies>
@@ -28,6 +28,13 @@
     </dependencies>
 
     <build>
+        <!-- Los sprites viven en la carpeta sprites/ de la raíz y se empaquetan en el jar como /sprites/ -->
+        <resources>
+            <resource>
+                <directory>sprites</directory>
+                <targetPath>sprites</targetPath>
+            </resource>
+        </resources>
         <plugins>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
@@ -46,6 +53,12 @@
                 <groupId>org.jacoco</groupId>
                 <artifactId>jacoco-maven-plugin</artifactId>
                 <version>${jacoco.version}</version>
+                <configuration>
+                    <!-- La presentación (Swing) se prueba ejecutando el juego, no con pruebas de unidad -->
+                    <excludes>
+                        <exclude>com/doposoccer/presentation/**</exclude>
+                    </excludes>
+                </configuration>
                 <executions>
                     <execution>
                         <id>prepare-agent</id>
