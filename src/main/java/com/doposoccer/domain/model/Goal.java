@@ -11,6 +11,8 @@ import com.doposoccer.domain.match.GoalListener;
  */
 public class Goal extends GameObject {
 
+    private static final long serialVersionUID = 1L;
+
     private final TeamSide defender;
     private final GoalListener listener;
 
@@ -20,7 +22,7 @@ public class Goal extends GameObject {
      * @param listener who is notified when a goal is scored
      */
     public Goal(TeamSide defender, GoalListener listener) {
-        super((TeamSideInfo.of(defender).borderX() + TeamSideInfo.of(defender).goalLineX()) / 2, Field.GROUND_Y - Field.GOAL_HEIGHT / 2,
+        super((defender.borderX() + defender.goalLineX()) / 2, Field.GROUND_Y - Field.GOAL_HEIGHT / 2,
                 Field.GOAL_DEPTH, Field.GOAL_HEIGHT);
         this.defender = defender;
         this.listener = listener;
@@ -36,13 +38,16 @@ public class Goal extends GameObject {
 
     /**
      * Bounces the ball on the crossbar and reports a goal if the ball got in
+     * A power shot that bounces on the crossbar loses its power
      * @param ball the ball of the match
      */
     @Override
     public void checkCollision(Ball ball) {
-        ball.bounceOffRect(getLeft(), Field.crossbarY() - Field.CROSSBAR_THICKNESS, getRight(), Field.crossbarY());
+        if (ball.bounceOffRect(getLeft(), Field.crossbarY() - Field.CROSSBAR_THICKNESS, getRight(), Field.crossbarY())) {
+            ball.endPowerShot();
+        }
         if (contains(ball)) {
-            listener.goalScored(TeamSideInfo.of(defender).opponent());
+            listener.goalScored(defender.opponent());
         }
     }
 
@@ -53,7 +58,7 @@ public class Goal extends GameObject {
      */
     public boolean contains(Ball ball) {
         boolean belowCrossbar = ball.getTop() >= Field.crossbarY();
-        boolean crossedLine = TeamSideInfo.of(defender).getDirection() * (TeamSideInfo.of(defender).goalLineX() - ball.getX()) >= ball.getRadius();
+        boolean crossedLine = defender.getDirection() * (defender.goalLineX() - ball.getX()) >= ball.getRadius();
         return belowCrossbar && crossedLine;
     }
 
@@ -64,7 +69,7 @@ public class Goal extends GameObject {
     @Override
     public RenderState getRenderState() {
         return new RenderState(Figure.GOAL, "goal", x, y, width, height, 0,
-                TeamSideInfo.of(defender).getDirection() < 0);
+                defender.getDirection() < 0);
     }
 
     /**

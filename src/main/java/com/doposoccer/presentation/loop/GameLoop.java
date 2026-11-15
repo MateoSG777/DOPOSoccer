@@ -1,11 +1,11 @@
 package com.doposoccer.presentation.loop;
-import com.doposoccer.domain.match.Match;
-import com.doposoccer.domain.match.status.MatchStatusBehavior;
+import com.doposoccer.domain.DOPOSoccer;
 import javax.swing.SwingUtilities;
 
 /**
  * Game loop running in its own thread at 60 frames per second. It measures the
- * elapsed time and advances the physics in fixed steps of 1/60 s.
+ * elapsed time and advances the physics in fixed steps of 1/60 s, so the game keeps
+ * its speed even when a frame takes longer to draw.
  */
 public class GameLoop implements Runnable {
 
@@ -22,18 +22,20 @@ public class GameLoop implements Runnable {
     private static final long NANOS_PER_MILLI = 1_000_000L;
     private static final long FRAME_NANOS = NANOS_PER_SECOND / TARGET_FPS;
 
-    private final Match match;
+    private static final long JOIN_MILLIS = 100;  // longer than one frame, so the old loop always ends
+
+    private final DOPOSoccer game;
     private final MatchView view;
     private volatile boolean running;
     private Thread thread;
 
     /**
      * Creates the loop of a match
-     * @param match match to update
+     * @param game  game whose match is updated
      * @param view  screen that shows the match
      */
-    public GameLoop(Match match, MatchView view) {
-        this.match = match;
+    public GameLoop(DOPOSoccer game, MatchView view) {
+        this.game = game;
         this.view = view;
     }
 
@@ -45,9 +47,16 @@ public class GameLoop implements Runnable {
         thread.start();
     }
 
-    /** Asks the loop to stop; it ends at the end of the current frame*/
+    /** Stops the loop and waits for the current frame to end, so it never touches the next match*/
     public void stop() {
         running = false;
+        if (thread != null && thread != Thread.currentThread()) {
+            try {
+                thread.join(JOIN_MILLIS);
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+            }
+        }
     }
 
     /**
@@ -70,7 +79,7 @@ public class GameLoop implements Runnable {
             accumulator += Math.min(dt, MAX_FRAME_TIME);
             try {
                 while (accumulator >= STEP) {
-                    match.update(STEP);
+                    game.update(STEP);
                     accumulator -= STEP;
                 }
             } catch (RuntimeException e) {
@@ -79,7 +88,7 @@ public class GameLoop implements Runnable {
                 return;
             }
             view.refresh();
-            if (MatchStatusBehavior.get(match.getStatus()).isOver()) {
+            if (game.isOver()) {
                 running = false;
                 notifyView(null);
                 return;

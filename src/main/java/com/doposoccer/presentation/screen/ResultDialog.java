@@ -1,15 +1,14 @@
 package com.doposoccer.presentation.screen;
+import com.doposoccer.domain.DOPOSoccer;
 import com.doposoccer.domain.DOPOSoccerException;
-import com.doposoccer.domain.country.CountryInfo;
 import com.doposoccer.domain.enums.Country;
 import com.doposoccer.domain.enums.TeamSide;
-import com.doposoccer.domain.match.Match;
 import com.doposoccer.domain.match.MatchSnapshot;
-import com.doposoccer.domain.model.TeamSideInfo;
 import com.doposoccer.presentation.DOPOSoccerGUI;
 import com.doposoccer.presentation.component.ImageButton;
 import com.doposoccer.presentation.resource.SpriteCache;
 import com.doposoccer.presentation.resource.SpritePath;
+import com.doposoccer.presentation.style.NumberStyle;
 import com.doposoccer.presentation.style.TextStyle;
 import javax.swing.JDialog;
 import javax.swing.JFrame;
@@ -33,11 +32,11 @@ public class ResultDialog extends JDialog {
      * Creates the result window of a match
      * @param owner   main window
      * @param sprites shared sprite cache
-     * @param match   finished match
+     * @param game    facade of the domain, with the finished match
      */
-    public ResultDialog(JFrame owner, SpriteCache sprites, Match match) {
+    public ResultDialog(JFrame owner, SpriteCache sprites, DOPOSoccer game) {
         super(owner, DOPOSoccerGUI.TITLE, true);
-        ResultPanel panel = new ResultPanel(sprites, match);
+        ResultPanel panel = new ResultPanel(sprites, game);
         panel.setPreferredSize(new Dimension(WIDTH, HEIGHT));
         setContentPane(panel);
         setResizable(false);
@@ -55,17 +54,17 @@ public class ResultDialog extends JDialog {
 
     private class ResultPanel extends BackgroundPanel {
 
-        private final Match match;
+        private final DOPOSoccer game;
         private final MatchSnapshot result;
         private final String title;
         private final ImageButton rematchButton;
         private final ImageButton menuButton;
 
-        ResultPanel(SpriteCache sprites, Match match) {
+        ResultPanel(SpriteCache sprites, DOPOSoccer game) {
             super(sprites, SpritePath.background("menu_vs"), 0);
-            this.match = match;
-            this.result = match.snapshot();
-            this.title = titleOf(match);
+            this.game = game;
+            this.result = game.snapshot();
+            this.title = titleOf(game);
             rematchButton = new ImageButton("REVANCHA", sprites);
             menuButton = new ImageButton("MENÚ", sprites);
             rematchButton.addActionListener(e -> {
@@ -77,9 +76,9 @@ public class ResultDialog extends JDialog {
             add(menuButton);
         }
 
-        private String titleOf(Match finished) {
+        private String titleOf(DOPOSoccer finished) {
             try {
-                return "¡GANA EL " + TeamSideInfo.of(finished.getWinner()).getLabel().toUpperCase() + "!";
+                return "¡GANA EL " + finished.getWinner().getLabel().toUpperCase() + "!";
             } catch (DOPOSoccerException e) {
                 return "PARTIDO TERMINADO";
             }
@@ -103,19 +102,18 @@ public class ResultDialog extends JDialog {
             TextStyle.TITLE.draw(g2, title, DESIGN_WIDTH / 2, 70);
             TeamSide[] sides = TeamSide.values();
             for (int i = 0; i < sides.length; i++) {
-                double x = TeamSideInfo.of(sides[i]).spawnX();
-                Country country = match.getConfig().getCountry(sides[i]);
-                CountryInfo info = CountryInfo.get(country);
-                String heading = TeamSideInfo.of(sides[i]).getLabel().toUpperCase() + " · " + info.getDisplayName();
+                double x = sides[i].spawnX();
+                Country country = game.getConfig().getCountry(sides[i]);
+                String heading = sides[i].getLabel().toUpperCase() + " · " + country.getDisplayName();
                 TextStyle.HEADING.draw(g2, heading, x, 150);
-                drawCountry(g2, SpritePath.character(info.getSpriteKey()), country, x, 300, HEAD_SIZE);
-                if (match.hasWinner()) {
-                    TextStyle.SUBTITLE.draw(g2, "+" + match.getPointsEarned(sides[i]) + " puntos", x, 455);
+                drawCountry(g2, SpritePath.character(country.getSpriteKey()), country, x, 300, HEAD_SIZE);
+                if (game.hasWinner() && game.getConfig().isHuman(sides[i])) {
+                    TextStyle.SUBTITLE.draw(g2, "+" + game.getPointsEarned(sides[i]) + " puntos", x, 455);
                 }
             }
-            String score = result.getGoals(TeamSide.LEFT) + "  -  " + result.getGoals(TeamSide.RIGHT);
-            TextStyle.SCORE.draw(g2, score, DESIGN_WIDTH / 2, 470);
-            if (!match.hasWinner()) {
+            String score = result.getGoals(TeamSide.LEFT) + " - " + result.getGoals(TeamSide.RIGHT);
+            NumberStyle.BIG.draw(g2, sprites, score, DESIGN_WIDTH / 2, 455, 54);
+            if (!game.hasWinner()) {
                 TextStyle.TEXT.draw(g2, "Partido terminado por los jugadores: sin ganador ni puntos", DESIGN_WIDTH / 2, 510);
             }
             g2.dispose();

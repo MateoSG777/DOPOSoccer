@@ -1,6 +1,7 @@
 package com.doposoccer.presentation.style;
 import java.awt.Font;
 import java.awt.Graphics2D;
+import java.awt.font.TextLayout;
 
 /**
  * Text styles of the game: size, fill color and outline of each kind of text
@@ -72,6 +73,8 @@ public final class TextStyle {
      * @param baseline y of the text baseline
      */
     public void drawFromLeft(Graphics2D g, String text, double left, double baseline) {
-        draw(g, text, left + g.getFontMetrics(font).stringWidth(text) / 2.0, baseline);
+        double width = new TextLayout(Theme.withFallback(text, font).getIterator(),
+                g.getFontRenderContext()).getAdvance();
+        draw(g, text, left + width / 2.0, baseline);
     }
 }

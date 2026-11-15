@@ -12,9 +12,21 @@ public final class SpritePath {
     private static final String FLAGS = "flags/";
     private static final String MATCH = "match/";
     private static final String UI = "ui/";
+    private static final String NUMBERS = "numbers/";
     private static final String FLAG_PREFIX = "flag_";
 
     private SpritePath() {
+    }
+
+    /**
+     * Returns the key of the image of one digit.
+     *
+     * @param style name of the set of digits, such as "big" or "small"
+     * @param digit character from '0' to '9'
+     * @return the key to give to the sprite cache
+     */
+    public static String digit(String style, char digit) {
+        return NUMBERS + style + "_" + digit;
     }
 
     /**

@@ -1,6 +1,6 @@
 package com.doposoccer.presentation.style;
 
-import com.doposoccer.domain.country.CountryInfo;
+import com.doposoccer.domain.Log;
 import com.doposoccer.domain.enums.Country;
 
 import java.awt.BasicStroke;
@@ -9,9 +9,14 @@ import java.awt.Font;
 import java.awt.Graphics2D;
 import java.awt.RenderingHints;
 import java.awt.Shape;
+import java.awt.font.TextAttribute;
 import java.awt.font.TextLayout;
+import java.text.AttributedString;
+import java.awt.FontFormatException;
 import java.awt.geom.AffineTransform;
 import java.awt.image.BufferedImage;
+import java.io.IOException;
+import java.io.InputStream;
 import java.util.EnumMap;
 import java.util.HashMap;
 import java.util.Map;
@@ -21,9 +26,15 @@ import java.util.Map;
  */
 public final class Theme {
 
-    /** Logical font family available on every platform*/
+    /** Logical font family used if the game font cannot be read*/
     public static final String FONT_FAMILY = Font.SANS_SERIF;
 
+    /** Game font, Russo One, inside the sprites folder*/
+    public static final String FONT_PATH = "/sprites/fonts/RussoOne-Regular.ttf";
+
+    private static final Font BASE_FONT = loadFont();
+
+    private static final int GLOW_ALPHA = 130;  // the figure is still seen through the glow
     private static final Map<Palette, Color> COLORS = new EnumMap<>(Palette.class);
     private static final Map<String, Palette> COUNTRY_COLORS = new HashMap<>();
 
@@ -40,6 +51,8 @@ public final class Theme {
         COLORS.put(Palette.GRASS, new Color(110, 170, 40));
         COLORS.put(Palette.FIELD, new Color(70, 140, 40));
         COLORS.put(Palette.NET, new Color(240, 240, 240));
+        COLORS.put(Palette.LIFE, new Color(76, 200, 80));
+        COLORS.put(Palette.POWER, new Color(60, 150, 255));
         COLORS.put(Palette.KOREA, new Color(211, 47, 47));
         COLORS.put(Palette.CAMEROON, new Color(46, 125, 50));
         COLORS.put(Palette.NIGERIA, new Color(67, 160, 71));
@@ -54,13 +67,24 @@ public final class Theme {
     private Theme() {
     }
 
+    private static Font loadFont() {
+        try (InputStream input = Theme.class.getResourceAsStream(FONT_PATH)) {
+            if (input != null) {
+                return Font.createFont(Font.TRUETYPE_FONT, input);
+            }
+        } catch (IOException | FontFormatException e) {
+            Log.record(e);
+        }
+        return new Font(FONT_FAMILY, Font.BOLD, 1);
+    }
+
     /**
-     * Returns the bold game font of the given size
+     * Returns the game font of the given size
      * @param size font size in points
-     * @return a bold sans-serif font
+     * @return Russo One, or a bold sans-serif font if Russo One cannot be read
      */
     public static Font font(float size) {
-        return new Font(FONT_FAMILY, Font.BOLD, 1).deriveFont(size);
+        return BASE_FONT.deriveFont(size);
     }
 
     /**
@@ -82,6 +106,16 @@ public final class Theme {
     }
 
     /**
+     * Looks up the translucent color of the glow of a power
+     * @param spriteKey key of the sprites of the country whose power shines
+     * @return the color of that country, half transparent
+     */
+    public static Color glowColor(String spriteKey) {
+        Color base = countryColor(spriteKey);
+        return new Color(base.getRed(), base.getGreen(), base.getBlue(), GLOW_ALPHA);
+    }
+
+    /**
      * Turns on antialiasing and quality interpolation
      * @param g graphics to configure
      */
@@ -90,6 +124,24 @@ public final class Theme {
         g.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING, RenderingHints.VALUE_TEXT_ANTIALIAS_ON);
         g.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BILINEAR);
         g.setRenderingHint(RenderingHints.KEY_RENDERING, RenderingHints.VALUE_RENDER_QUALITY);
+    }
+
+    /**
+     * Gives the text the game font; the characters it does not have, such as the arrows, use the system font
+     * @param text text to write
+     * @param font game font
+     * @return the text with a font for every character
+     */
+    public static AttributedString withFallback(String text, Font font) {
+        AttributedString styled = new AttributedString(text);
+        styled.addAttribute(TextAttribute.FONT, font);
+        Font fallback = new Font(FONT_FAMILY, Font.BOLD, 1).deriveFont(font.getSize2D());
+        for (int i = 0; i < text.length(); i++) {
+            if (!font.canDisplay(text.charAt(i))) {
+                styled.addAttribute(TextAttribute.FONT, fallback, i, i + 1);
+            }
+        }
+        return styled;
     }
 
     /**
@@ -108,7 +160,7 @@ public final class Theme {
         if (text == null || text.isEmpty()) {
             return;
         }
-        TextLayout layout = new TextLayout(text, font, g.getFontRenderContext());
+        TextLayout layout = new TextLayout(withFallback(text, font).getIterator(), g.getFontRenderContext());
         double x = centerX - layout.getAdvance() / 2;
         Shape shape = layout.getOutline(AffineTransform.getTranslateInstance(x, baseline));
         if (outlineWidth > 0) {
@@ -139,7 +191,7 @@ public final class Theme {
             g.drawImage(image, left, top, (int) size, (int) size, null);
             return;
         }
-        g.setColor(countryColor(CountryInfo.get(country).getSpriteKey()));
+        g.setColor(countryColor(country.getSpriteKey()));
         g.fillOval(left, top, (int) size, (int) size);
     }
 }

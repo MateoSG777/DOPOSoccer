@@ -1,5 +1,4 @@
 package com.doposoccer.domain.control;
-import com.doposoccer.domain.action.PlayerActionBehavior;
 import com.doposoccer.domain.enums.PlayerAction;
 import com.doposoccer.domain.model.Ball;
 import com.doposoccer.domain.model.Player;
@@ -29,7 +28,7 @@ public class KeyboardControl implements ControlStrategy {
     public void update(Player player, Ball ball, double dt) {
         List<PlayerAction> actions = source.getActiveActions();
         for (int i = 0; i < actions.size(); i++) {
-            PlayerActionBehavior.get(actions.get(i)).apply(player);
+            actions.get(i).apply(player);
         }
     }
 }

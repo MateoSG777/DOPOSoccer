@@ -17,6 +17,8 @@ public final class MatchSnapshot {
     private final MatchStatus status;
     private final boolean suddenDeath;
     private final List<RenderState> renderStates;
+    private final Map<TeamSide, Double> life;
+    private final Map<TeamSide, Double> power;
 
     /**
      * Creates a snapshot
@@ -25,14 +27,37 @@ public final class MatchSnapshot {
      * @param status status of the match
      * @param suddenDeath  true if the next goal wins
      * @param renderStates what must be drawn, in drawing order
+     * @param life fraction of life of each side, between 0 and 1
+     * @param power fraction of the power bar of each side, between 0 and 1
      */
     public MatchSnapshot(Map<TeamSide, Integer> score, String clockText, MatchStatus status,
-                         boolean suddenDeath, List<RenderState> renderStates) {
+                         boolean suddenDeath, List<RenderState> renderStates,
+                         Map<TeamSide, Double> life, Map<TeamSide, Double> power) {
         this.score = score;
         this.clockText = clockText;
         this.status = status;
         this.suddenDeath = suddenDeath;
         this.renderStates = renderStates;
+        this.life = life;
+        this.power = power;
+    }
+
+    /**
+     * Returns the life of one side
+     * @param side side to query
+     * @return a value between 0 and 1
+     */
+    public double getLife(TeamSide side) {
+        return life.get(side);
+    }
+
+    /**
+     * Returns the charge of the power bar of one side
+     * @param side side to query
+     * @return a value between 0 and 1
+     */
+    public double getPower(TeamSide side) {
+        return power.get(side);
     }
 
     /**

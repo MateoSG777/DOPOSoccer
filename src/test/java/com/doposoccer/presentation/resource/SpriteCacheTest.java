@@ -1,6 +1,5 @@
 package com.doposoccer.presentation.resource;
 
-import com.doposoccer.domain.country.CountryInfo;
 import com.doposoccer.domain.enums.Country;
 
 import org.junit.jupiter.api.Test;
@@ -52,11 +51,29 @@ class SpriteCacheTest {
             SpritePath.button("btn"), SpritePath.button("btn_pressed"),
             SpritePath.character("body_2"), SpritePath.character("foot"),
             SpritePath.match("ball"), SpritePath.match("goalpost1"), SpritePath.match("goalpost2"),
-            SpritePath.ui("logo"), SpritePath.ui("menu_ch")
+            SpritePath.ui("logo"), SpritePath.ui("ball-2"), SpritePath.ui("tienda_mejoras"),
+            SpritePath.ui("bolita_oro")
         };
         for (int i = 0; i < keys.length; i++) {
             assertNotNull(cache.get(keys[i]), keys[i]);
         }
+    }
+
+    /** Every digit should exist in the big and the small sets. */
+    @Test
+    void everyDigitShouldExist() {
+        SpriteCache cache = new SpriteCache();
+        String digits = "0123456789";
+        for (int i = 0; i < digits.length(); i++) {
+            assertNotNull(cache.get(SpritePath.digit("big", digits.charAt(i))));
+            assertNotNull(cache.get(SpritePath.digit("small", digits.charAt(i))));
+        }
+    }
+
+    /** The game font should be in the sprites folder. */
+    @Test
+    void gameFontShouldExist() {
+        assertNotNull(SpriteCache.class.getResourceAsStream(com.doposoccer.presentation.style.Theme.FONT_PATH));
     }
 
     /** Every country should have its head and its flag. */
@@ -65,7 +82,7 @@ class SpriteCacheTest {
         SpriteCache cache = new SpriteCache();
         Country[] countries = Country.values();
         for (int i = 0; i < countries.length; i++) {
-            String key = CountryInfo.of(countries[i]).getSpriteKey();
+            String key = countries[i].getSpriteKey();
             assertNotNull(cache.get(SpritePath.character(key)), key);
             assertNotNull(cache.get(SpritePath.flag(key)), key);
         }

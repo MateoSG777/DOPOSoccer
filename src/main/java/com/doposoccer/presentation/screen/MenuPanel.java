@@ -7,18 +7,25 @@ import com.doposoccer.presentation.style.Palette;
 import com.doposoccer.presentation.style.Theme;
 import java.awt.Graphics2D;
 import java.awt.Graphics;
+import javax.swing.Timer;
 
 /**
- * Main menu: game logo, a character and the main buttons
- * The store is shown disabled because it arrives in version two
+ * Main menu: game logo, a ball that keeps spinning in its place and the main buttons
  */
 public class MenuPanel extends BackgroundPanel {
 
     private static final double WATERMARK_CROP = 0.12;  // the copyright text uses the last 12 % of menu.png
+    private static final double BALL_X = 740;  // center of the free space on the right of the buttons
+    private static final double BALL_Y = 330;
+    private static final double BALL_SIZE = 330;
+    private static final double DEGREES_PER_SECOND = 90;  // one turn every four seconds
+    private static final int FRAME_MS = 16;
 
     private final ImageButton playButton;
+    private final ImageButton loadButton;
     private final ImageButton storeButton;
     private final ImageButton exitButton;
+    private final long start = System.nanoTime();
 
     /**
      * Creates the main menu
@@ -28,28 +35,38 @@ public class MenuPanel extends BackgroundPanel {
     public MenuPanel(final DOPOSoccerGUI gui, SpriteCache sprites) {
         super(sprites, SpritePath.background("menu"), WATERMARK_CROP);
         playButton = new ImageButton("JUGAR", sprites);
+        loadButton = new ImageButton("CARGAR", sprites);
         storeButton = new ImageButton("TIENDA", sprites);
         exitButton = new ImageButton("SALIR", sprites);
-        storeButton.setEnabled(false);
-        storeButton.setToolTipText("Disponible en la versión 2");
 
         playButton.addActionListener(e -> gui.showConfig());
+        loadButton.addActionListener(e -> gui.showLoad());
+        storeButton.addActionListener(e -> gui.showStore());
         exitButton.addActionListener(e -> gui.exit());
         add(playButton);
+        add(loadButton);
         add(storeButton);
         add(exitButton);
+        new Timer(FRAME_MS, e -> spin()).start();
+    }
+
+    private void spin() {
+        if (isShowing()) {
+            repaint();
+        }
     }
 
     /** Places the buttons under the logo, on the left half of the screen*/
     @Override
     public void doLayout() {
-        place(playButton, 120, 330, 300, 100);
-        place(storeButton, 120, 425, 300, 100);
-        place(exitButton, 120, 520, 300, 100);
+        place(playButton, 135, 300, 270, 86);
+        place(loadButton, 135, 382, 270, 86);
+        place(storeButton, 135, 464, 270, 86);
+        place(exitButton, 135, 546, 270, 86);
     }
 
     /**
-     * Paints the background, the logo and the character
+     * Paints the background, the logo and the spinning ball
      * @param g graphics given by Swing
      */
     @Override
@@ -58,7 +75,11 @@ public class MenuPanel extends BackgroundPanel {
         Graphics2D g2 = designGraphics(g);
         g2.setColor(Theme.color(Palette.SHADE));
         g2.fillRect(0, 0, (int) DESIGN_WIDTH, (int) DESIGN_HEIGHT);
-        drawCentered(g2, SpritePath.ui("menu_ch"), 760, 360, 600, 400);
+        double seconds = (System.nanoTime() - start) / 1e9;
+        Graphics2D ball = (Graphics2D) g2.create();
+        ball.rotate(Math.toRadians(seconds * DEGREES_PER_SECOND), BALL_X, BALL_Y);
+        drawCentered(ball, SpritePath.ui("ball-2"), BALL_X, BALL_Y, BALL_SIZE, BALL_SIZE);
+        ball.dispose();
         drawCentered(g2, SpritePath.ui("logo"), 270, 170, 440, 257);
         g2.dispose();
     }

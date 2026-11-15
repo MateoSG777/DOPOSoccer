@@ -3,6 +3,7 @@ package com.doposoccer.domain.match;
 import com.doposoccer.domain.DOPOSoccerException;
 import com.doposoccer.domain.enums.Country;
 import com.doposoccer.domain.enums.GameMode;
+import com.doposoccer.domain.enums.MachineProfile;
 import com.doposoccer.domain.enums.MatchStatus;
 import com.doposoccer.domain.enums.MatchType;
 import com.doposoccer.domain.enums.Resolution;
@@ -26,7 +27,7 @@ class MatchTest {
 
     private Match newMatch(MatchType type, int target) throws DOPOSoccerException {
         return new Match(new MatchConfig(GameMode.PLAYER_VS_PLAYER, Resolution.MEDIUM,
-                Country.KOREA, Country.CAMEROON, type, target));
+                Country.KOREA, Country.CAMEROON, type, target, MachineProfile.CLUMSY));
     }
 
     private void play(Match match, double seconds) {

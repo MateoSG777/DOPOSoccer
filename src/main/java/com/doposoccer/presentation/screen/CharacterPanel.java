@@ -1,9 +1,7 @@
 package com.doposoccer.presentation.screen;
 
-import com.doposoccer.domain.country.CountryInfo;
 import com.doposoccer.domain.enums.Country;
 import com.doposoccer.domain.enums.TeamSide;
-import com.doposoccer.domain.model.TeamSideInfo;
 import com.doposoccer.presentation.DOPOSoccerGUI;
 import com.doposoccer.presentation.component.ImageButton;
 import com.doposoccer.presentation.input.PlayerKeys;
@@ -70,7 +68,7 @@ public class CharacterPanel extends BackgroundPanel {
     public void doLayout() {
         TeamSide[] sides = TeamSide.values();
         for (int i = 0; i < sides.length; i++) {
-            double x = TeamSideInfo.of(sides[i]).spawnX();
+            double x = sides[i].spawnX();
             place(arrows.get(sides[i])[0], x - 200, HEAD_Y - 35, 90, 70);
             place(arrows.get(sides[i])[1], x + 110, HEAD_Y - 35, 90, 70);
         }
@@ -89,15 +87,14 @@ public class CharacterPanel extends BackgroundPanel {
         TextStyle.TITLE.draw(g2, "ELIGE TU PERSONAJE", DESIGN_WIDTH / 2, 55);
         TeamSide[] sides = TeamSide.values();
         for (int i = 0; i < sides.length; i++) {
-            double x = TeamSideInfo.of(sides[i]).spawnX();
+            double x = sides[i].spawnX();
             Country country = getCountry(sides[i]);
-            CountryInfo info = CountryInfo.get(country);
-            TextStyle.SUBTITLE.draw(g2, TeamSideInfo.of(sides[i]).getLabel().toUpperCase(), x, 120);
+            TextStyle.SUBTITLE.draw(g2, sides[i].getLabel().toUpperCase(), x, 120);
             TextStyle.SMALL.draw(g2, PlayerKeys.of(sides[i]).getHint(), x, 150);
-            drawCountry(g2, SpritePath.character(info.getSpriteKey()), country, x, HEAD_Y, HEAD_SIZE);
-            drawCountry(g2, SpritePath.flag(info.getSpriteKey()), country, x, 448, FLAG_SIZE);
-            TextStyle.HEADING.draw(g2, info.getDisplayName().toUpperCase(), x, 500);
-            TextStyle.DETAIL.draw(g2, "Tiro de poder: " + info.getPowerName(), x, 525);
+            drawCountry(g2, SpritePath.character(country.getSpriteKey()), country, x, HEAD_Y, HEAD_SIZE);
+            drawCountry(g2, SpritePath.flag(country.getSpriteKey()), country, x, 448, FLAG_SIZE);
+            TextStyle.HEADING.draw(g2, country.getDisplayName().toUpperCase(), x, 500);
+            TextStyle.DETAIL.draw(g2, "Tiro de poder: " + country.getPowerName(), x, 525);
         }
         g2.dispose();
     }

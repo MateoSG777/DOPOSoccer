@@ -17,6 +17,7 @@ import java.awt.image.BufferedImage;
  * and the moving leg, which gives the illusion of a single kicking leg
  * The puppet is built facing right and the player on the right side is drawn
  * mirrored. The head images face left, so the head is always flipped inside the puppet
+ * A player with the aura shines with the color of its country and a dazed one shows stars
  */
 public class PlayerPainter implements FigurePainter {
 
@@ -24,6 +25,9 @@ public class PlayerPainter implements FigurePainter {
     private static final double PIXEL_ART_SCALE = 2.6;
     private static final double FALLBACK_FOOT_WIDTH = 17;
     private static final double FALLBACK_FOOT_HEIGHT = 9;
+    private static final double AURA_RATIO = 1.9;
+    private static final double STAR_SIZE = 12;
+    private static final double STAR_GAP = 22;
     private static final String BODY_KEY = SpritePath.character("body_2");
     private static final String FOOT_KEY = SpritePath.character("foot");
 
@@ -52,10 +56,31 @@ public class PlayerPainter implements FigurePainter {
         double top = -state.getHeight() / 2;
         double headCenterY = top + Player.HEAD_RADIUS;
 
+        paintAura(g, state, headCenterY);
         paintBody(g, headCenterY + Player.HEAD_RADIUS - 4);
         paintHead(g, state, headCenterY);
         paintFoot(g, state);
+        paintStars(g, state, top);
         g.setTransform(original);
+    }
+
+    private void paintAura(Graphics2D g, RenderState state, double headCenterY) {
+        if (state.getGlow() == null) {
+            return;
+        }
+        double size = Player.HEAD_RADIUS * 2 * AURA_RATIO;
+        g.setColor(Theme.glowColor(state.getGlow()));
+        g.fill(new Ellipse2D.Double(-size / 2, headCenterY - size / 2, size, size));
+    }
+
+    private void paintStars(Graphics2D g, RenderState state, double top) {
+        if (!state.isDazed()) {
+            return;
+        }
+        g.setColor(Theme.color(Palette.GOLD));
+        for (int i = -1; i <= 1; i++) {
+            g.fill(new Ellipse2D.Double(i * STAR_GAP - STAR_SIZE / 2, top - STAR_SIZE * 2, STAR_SIZE, STAR_SIZE));
+        }
     }
 
     private double paintBody(Graphics2D g, double topY) {

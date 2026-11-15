@@ -1,12 +1,15 @@
 package com.doposoccer.domain.match;
 import com.doposoccer.domain.enums.TeamSide;
+import java.io.Serializable;
 import java.util.HashMap;
 import java.util.Map;
 
 /**
  * Score of the match. It always starts 0 - 0
  */
-public final class Scoreboard {
+public final class Scoreboard implements Serializable {
+
+    private static final long serialVersionUID = 1L;
 
     private final Map<TeamSide, Integer> goals = new HashMap<>();
 

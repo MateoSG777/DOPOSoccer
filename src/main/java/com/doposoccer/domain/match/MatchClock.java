@@ -1,10 +1,13 @@
 package com.doposoccer.domain.match;
+import java.io.Serializable;
 
 /**
  * Match clock. A countdown for timed matches or a stopwatch for goals matches
  * A stopwatch is a countdown with an infinite duration, so it never expires
  */
-public final class MatchClock {
+public final class MatchClock implements Serializable {
+
+    private static final long serialVersionUID = 1L;
 
     private static final int SECONDS_PER_MINUTE = 60;
     private final double durationSeconds;

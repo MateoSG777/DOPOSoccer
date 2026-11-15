@@ -1,12 +1,20 @@
 package com.doposoccer.domain.model;
 
 import com.doposoccer.domain.enums.Figure;
+import com.doposoccer.domain.power.Hit;
+import com.doposoccer.domain.power.ImpactHandler;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * The ball: affected by gravity, it bounces on the ground, the ceiling, the
  * side borders, the crossbars and the players
+ * A player with the aura turns it into a power shot: it flies straight to the rival goal without
+ * gravity, and the power ends at the first thing it bounces on. If that thing is the rival, it is hurt
  */
 public class Ball extends GameObject {
+
+    private static final long serialVersionUID = 1L;
 
     // Radius of the ball
     public static final double RADIUS = 18;
@@ -26,11 +34,21 @@ public class Ball extends GameObject {
     // Maximum speed of the ball
     public static final double MAX_SPEED = 1300;  // about one field width per second: fast but still visible
 
+    // Horizontal speed of a power shot
+    public static final double POWER_SHOT_SPEED = 1100;  // faster than a normal kick, below the maximum speed
+
+    // Fake balls shown by the illusion
+    public static final int FAKE_BALLS = 7;
+
     private static final double ROTATION_FACTOR = 0.5;  // the ball turns about as fast as it rolls
+    private static final double FAKE_SPREAD_X = 25;  // each fake ball flies a bit farther from the real one
+    private static final double FAKE_SPREAD_Y = 60;  // fake balls stay within a jump of the real one
 
     private double vx;
     private double vy;
     private double rotation;
+    private Player shooter;
+    private double illusionTimer;
 
     /**
      * Creates a ball at rest
@@ -42,16 +60,90 @@ public class Ball extends GameObject {
     }
 
     /**
-     * Applies gravity, moves the ball and bounces it on the field borders
+     * Moves the ball and bounces it on the field borders. A power shot flies straight, without gravity
      * @param dt seconds elapsed since the last frame
      */
     @Override
     public void update(double dt) {
-        vy += Field.BALL_GRAVITY * dt;
+        illusionTimer = Math.max(0, illusionTimer - dt);
         x += vx * dt;
-        y += vy * dt;
         rotation += vx * dt * ROTATION_FACTOR;
+        if (isPowerShot()) {
+            keepInsideSides();
+            return;
+        }
+        vy += Field.BALL_GRAVITY * dt;
+        y += vy * dt;
         keepInsideField(dt);
+    }
+
+    /**
+     * A player touched the ball. A power shot that reaches the rival goes through the chain of impact
+     * and ends; a player with the aura starts a new power shot towards the rival goal
+     * If the rival also has the aura, it is not hurt and sends its own power shot back at once
+     * A power shot never flies above the head of the shooter, so a header can still reach a rival standing
+     * @param player the player that touched the ball
+     */
+    public void touchedBy(Player player) {
+        if (isPowerShot()) {
+            ImpactHandler.POWER.handle(new Hit(shooter, player,
+                    shooter.getCountry().getBaseDamage() * shooter.getKickFactor()));
+            endPowerShot();
+        }
+        if (player.hasAura()) {
+            shooter = player;
+            y = Math.max(y, player.getHeadY());
+            player.releaseAura();
+            kick(player.getSide().getDirection() * POWER_SHOT_SPEED, 0);
+            player.getCountry().shoot(this);
+        }
+    }
+
+    /** The power shot bounced on something: the power goes away and the ball is normal again */
+    public void endPowerShot() {
+        shooter = null;
+    }
+
+    /**
+     * Tells whether this ball is the power shot of a player, which passes through it
+     * @param player player to check
+     * @return true if that player launched the power shot in flight
+     */
+    public boolean isShotBy(Player player) {
+        return shooter == player;
+    }
+
+    /**
+     * Shows fake balls next to the real one for a while
+     * @param seconds duration of the illusion
+     */
+    public void startIllusion(double seconds) {
+        illusionTimer = seconds;
+    }
+
+    /**
+     * Returns the fake balls of the illusion to draw them
+     * @return one description per fake ball, empty when there is no illusion
+     */
+    public List<RenderState> getFakeStates() {
+        List<RenderState> fakes = new ArrayList<>();
+        if (illusionTimer <= 0) {
+            return fakes;
+        }
+        for (int i = 1; i <= FAKE_BALLS; i++) {
+            double fakeX = x + Math.cos(i * 2.4 + illusionTimer * 5) * FAKE_SPREAD_X * i;
+            double fakeY = y + Math.sin(i * 1.7 + illusionTimer * 7) * FAKE_SPREAD_Y;
+            fakeY = Math.min(fakeY, Field.GROUND_Y - RADIUS);
+            fakes.add(new RenderState(Figure.BALL, "ball", fakeX, fakeY, width, height, rotation, false, glow(), false));
+        }
+        return fakes;
+    }
+
+    private String glow() {
+        if (shooter == null) {
+            return null;
+        }
+        return shooter.getCountry().getSpriteKey();
     }
 
     /**
@@ -68,11 +160,11 @@ public class Ball extends GameObject {
      */
     @Override
     public RenderState getRenderState() {
-        return new RenderState(Figure.BALL, "ball", x, y, width, height, rotation, false);
+        return new RenderState(Figure.BALL, "ball", x, y, width, height, rotation, false, glow(), false);
     }
 
     /**
-     * Places the ball at rest
+     * Places the ball at rest. Any power shot ends without effect
      * @param x new x coordinate of the center
      * @param y new y coordinate of the center
      */
@@ -81,6 +173,8 @@ public class Ball extends GameObject {
         this.y = y;
         this.vx = 0;
         this.vy = 0;
+        this.shooter = null;
+        this.illusionTimer = 0;
     }
 
     /**
@@ -167,6 +261,13 @@ public class Ball extends GameObject {
         vy = relVy + carrierVy;
     }
 
+    private void keepInsideSides() {
+        if (x - RADIUS <= 0 || x + RADIUS >= Field.WIDTH) {
+            endPowerShot();
+            keepInsideField(0);
+        }
+    }
+
     private void keepInsideField(double dt) {
         if (y + RADIUS >= Field.GROUND_Y) {
             y = Field.GROUND_Y - RADIUS;
@@ -212,6 +313,14 @@ public class Ball extends GameObject {
      */
     public double getVy() {
         return vy;
+    }
+
+    /**
+     * Tells whether the ball is a power shot
+     * @return true while a power shot is flying
+     */
+    public boolean isPowerShot() {
+        return shooter != null;
     }
 
     /**

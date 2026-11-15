@@ -9,12 +9,13 @@ import java.awt.geom.AffineTransform;
 import java.awt.image.BufferedImage;
 
 /**
- * Draws the ball rotating as it rolls
+ * Draws the ball rotating as it rolls. A power shot shines with the color of the country that launched it
  */
 public class BallPainter implements FigurePainter {
 
     private static final double DRAW_SCALE = 1.0;
     private static final double OFFSET_Y = 0;
+    private static final double GLOW_RATIO = 1.8;
 
     private final SpriteCache sprites;
 
@@ -38,6 +39,11 @@ public class BallPainter implements FigurePainter {
         g.rotate(Math.toRadians(state.getAngle()));
         int w = (int) (state.getWidth() * DRAW_SCALE);
         int h = (int) (state.getHeight() * DRAW_SCALE);
+        if (state.getGlow() != null) {
+            int glow = (int) (w * GLOW_RATIO);
+            g.setColor(Theme.glowColor(state.getGlow()));
+            g.fillOval(-glow / 2, -glow / 2, glow, glow);
+        }
         BufferedImage ball = sprites.get(SpritePath.match(state.getSpriteKey()));
         if (ball != null) {
             g.drawImage(ball, -w / 2, -h / 2, w, h, null);

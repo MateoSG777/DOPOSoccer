@@ -42,6 +42,12 @@ public enum Palette {
     /** Goal frame when the goal images are missing*/
     NET,
 
+    /** Life bar of a player*/
+    LIFE,
+
+    /** Power bar of a player while it charges*/
+    POWER,
+
     /** Head of South Korea when its image is missing*/
     KOREA,
 

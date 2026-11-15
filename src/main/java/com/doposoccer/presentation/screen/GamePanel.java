@@ -1,18 +1,13 @@
 package com.doposoccer.presentation.screen;
 
+import com.doposoccer.domain.DOPOSoccer;
 import com.doposoccer.domain.DOPOSoccerException;
-import com.doposoccer.domain.control.KeyboardControl;
-import com.doposoccer.domain.enums.TeamSide;
-import com.doposoccer.domain.match.Match;
-import com.doposoccer.domain.match.MatchConfig;
 import com.doposoccer.domain.match.MatchSnapshot;
-import com.doposoccer.domain.match.status.MatchStatusBehavior;
 import com.doposoccer.domain.model.Field;
+import com.doposoccer.persistence.MatchSlots;
 import com.doposoccer.presentation.DOPOSoccerGUI;
 import com.doposoccer.presentation.component.ImageButton;
 import com.doposoccer.presentation.input.KeyInputHandler;
-import com.doposoccer.presentation.input.KeyboardActionSource;
-import com.doposoccer.presentation.input.PlayerKeys;
 import com.doposoccer.presentation.loop.GameLoop;
 import com.doposoccer.presentation.loop.MatchView;
 import com.doposoccer.presentation.render.Hud;
@@ -33,8 +28,9 @@ import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 
 /**
- * Match screen. It owns the match, the keyboard input and the game loop,
+ * Match screen. It owns the game loop and listens to the keyboard,
  * and draws every frame scaled to the chosen resolution.
+ * While the match is paused it can be saved in one of the three slots.
  */
 public class GamePanel extends JPanel implements MatchView {
 
@@ -43,34 +39,32 @@ public class GamePanel extends JPanel implements MatchView {
 
     private final DOPOSoccerGUI gui;
     private final SpriteCache sprites;
-    private final Match match;
-    private final KeyInputHandler input = new KeyInputHandler();
+    private final DOPOSoccer game;
+    private final KeyInputHandler input;
     private final MatchRenderer renderer;
     private final Hud hud;
     private final GameLoop loop;
     private final ImageButton pauseButton;
     private final ImageButton endButton;
+    private final ImageButton[] saveButtons = new ImageButton[MatchSlots.SLOTS];
 
     /**
-     * Creates the match screen: both players are driven by the keyboard.
+     * Creates the screen of the match that the game already started.
      *
      * @param gui     main window
      * @param sprites shared sprite cache
-     * @param config  validated configuration of the match
+     * @param game    facade of the domain, with the match ready to play
+     * @param input   pressed keys read by the human players
      */
-    public GamePanel(DOPOSoccerGUI gui, SpriteCache sprites, MatchConfig config) {
+    public GamePanel(DOPOSoccerGUI gui, SpriteCache sprites, DOPOSoccer game, KeyInputHandler input) {
         super(null);
         this.gui = gui;
         this.sprites = sprites;
-        this.match = new Match(config);
+        this.game = game;
+        this.input = input;
         this.renderer = new MatchRenderer(sprites);
         this.hud = new Hud(sprites);
-        this.loop = new GameLoop(match, this);
-
-        TeamSide[] sides = TeamSide.values();
-        for (int i = 0; i < sides.length; i++) {
-            match.setControl(sides[i], new KeyboardControl(new KeyboardActionSource(PlayerKeys.of(sides[i]), input)));
-        }
+        this.loop = new GameLoop(game, this);
 
         setFocusable(true);
         addKeyListener(input);
@@ -101,6 +95,13 @@ public class GamePanel extends JPanel implements MatchView {
         endButton.addActionListener(e -> endMatch());
         add(pauseButton);
         add(endButton);
+        for (int i = 0; i < saveButtons.length; i++) {
+            final int slot = i + 1;
+            saveButtons[i] = new ImageButton("GUARDAR " + slot, sprites);
+            saveButtons[i].addActionListener(e -> saveMatch(slot));
+            add(saveButtons[i]);
+        }
+        showPauseControls();
     }
 
     /** Starts the game loop and gives the keyboard focus to the match. */
@@ -116,12 +117,8 @@ public class GamePanel extends JPanel implements MatchView {
 
     private void togglePause() {
         try {
-            match.togglePause();
-            if (MatchStatusBehavior.get(match.getStatus()).isPaused()) {
-                pauseButton.setText(RESUME_TEXT);
-            } else {
-                pauseButton.setText(PAUSE_TEXT);
-            }
+            game.togglePause();
+            showPauseControls();
             repaint();
         } catch (DOPOSoccerException e) {
             DOPOSoccerGUI.showError(this, e);
@@ -129,11 +126,30 @@ public class GamePanel extends JPanel implements MatchView {
         requestFocusInWindow();
     }
 
+    private void showPauseControls() {
+        boolean paused = game.isPaused();
+        pauseButton.setText(paused ? RESUME_TEXT : PAUSE_TEXT);
+        for (int i = 0; i < saveButtons.length; i++) {
+            saveButtons[i].setVisible(paused);
+        }
+    }
+
+    private void saveMatch(int slot) {
+        try {
+            game.saveMatch(slot);
+            JOptionPane.showMessageDialog(this, "Partido guardado en el espacio " + slot + ".",
+                    DOPOSoccerGUI.TITLE, JOptionPane.INFORMATION_MESSAGE);
+        } catch (DOPOSoccerException e) {
+            DOPOSoccerGUI.showError(this, e);
+        }
+        requestFocusInWindow();
+    }
+
     private void endMatch() {
-        if (MatchStatusBehavior.get(match.getStatus()).isOver()) {
+        if (game.isOver()) {
             return;
         }
-        boolean wasPlaying = MatchStatusBehavior.get(match.getStatus()).advancesTime();
+        boolean wasPlaying = !game.isPaused();
         if (wasPlaying) {
             togglePause();
         }
@@ -142,7 +158,7 @@ public class GamePanel extends JPanel implements MatchView {
                 DOPOSoccerGUI.TITLE, JOptionPane.YES_NO_OPTION);
         try {
             if (answer == JOptionPane.YES_OPTION) {
-                match.end();
+                game.endMatch();
             } else if (wasPlaying) {
                 togglePause();
             }
@@ -158,6 +174,10 @@ public class GamePanel extends JPanel implements MatchView {
         double s = getWidth() / Field.WIDTH;
         pauseButton.setBounds((int) (12 * s), (int) (12 * s), (int) (170 * s), (int) (64 * s));
         endButton.setBounds((int) ((Field.WIDTH - 182) * s), (int) (12 * s), (int) (170 * s), (int) (64 * s));
+        for (int i = 0; i < saveButtons.length; i++) {
+            double left = Field.centerX() - 300 + i * 205;
+            saveButtons[i].setBounds((int) (left * s), (int) ((Field.HEIGHT / 2 + 85) * s), (int) (190 * s), (int) (64 * s));
+        }
     }
 
     /**
@@ -171,13 +191,13 @@ public class GamePanel extends JPanel implements MatchView {
         Graphics2D g2 = (Graphics2D) g.create();
         Theme.applyQuality(g2);
         g2.scale(getWidth() / Field.WIDTH, getHeight() / Field.HEIGHT);
-        MatchSnapshot snapshot = match.snapshot();
+        MatchSnapshot snapshot = game.snapshot();
         renderer.paint(g2, snapshot.getRenderStates());
-        hud.paint(g2, snapshot, match.getConfig());
+        hud.paint(g2, snapshot, game.getConfig());
         g2.dispose();
     }
 
-    /** Asks Swing to repaint; safe to call from the game loop thread. */
+    /** Asks Swing to repaint. */
     @Override
     public void refresh() {
         repaint();
@@ -187,10 +207,10 @@ public class GamePanel extends JPanel implements MatchView {
     @Override
     public void matchOver() {
         repaint();
-        ResultDialog dialog = new ResultDialog(gui, sprites, match);
+        ResultDialog dialog = new ResultDialog(gui, sprites, game);
         dialog.setVisible(true);
         if (dialog.wantsRematch()) {
-            gui.startMatch(match.getConfig());
+            gui.rematch();
         } else {
             gui.showMenu();
         }
@@ -205,14 +225,5 @@ public class GamePanel extends JPanel implements MatchView {
     public void showError(Exception error) {
         DOPOSoccerGUI.showError(this, error);
         gui.showMenu();
-    }
-
-    /**
-     * Returns the match shown by this screen.
-     *
-     * @return the match
-     */
-    public Match getMatch() {
-        return match;
     }
 }

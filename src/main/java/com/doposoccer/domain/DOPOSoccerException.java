@@ -9,10 +9,7 @@ package com.doposoccer.domain;
 public class DOPOSoccerException extends Exception {
 
     /** Thrown when some piece of the match configuration is missing*/
-    public static final String NULL_CONFIGURATION = "Debe completar toda la configuración del partido (modalidad, resolución, personajes y tipo de partido)";
-
-    /** Thrown when the chosen game mode is not playable in this version*/
-    public static final String MODE_NOT_AVAILABLE = "La modalidad seleccionada aún no está disponible en esta versión";
+    public static final String NULL_CONFIGURATION = "Debe completar toda la configuración del partido (modalidad, perfil, resolución, personajes y tipo de partido)";
 
     /** Thrown when the minutes or goals of the match are out of range*/
     public static final String INVALID_TARGET = "El valor del partido está fuera del rango permitido";
@@ -25,6 +22,30 @@ public class DOPOSoccerException extends Exception {
 
     /** Thrown when an action is requested on a match that is already over*/
     public static final String MATCH_FINISHED = "El partido ya terminó";
+
+    /** Thrown when a stat that is already at its last level is upgraded*/
+    public static final String MAX_LEVEL = "Esta habilidad ya está en el nivel máximo";
+
+    /** Thrown when a player cannot pay an upgrade*/
+    public static final String NOT_ENOUGH_POINTS = "No tienes puntos suficientes para esta mejora";
+
+    /** Thrown when the progress of the players cannot be written to disk*/
+    public static final String SAVE_FAILED = "No se pudo guardar el progreso de los jugadores";
+
+    /** Thrown when a saved match is requested from a slot that does not exist*/
+    public static final String INVALID_SLOT = "Ese espacio de guardado no existe";
+
+    /** Thrown when an empty slot is opened*/
+    public static final String EMPTY_SLOT = "No hay ningún partido guardado en ese espacio";
+
+    /** Thrown when a match cannot be written to disk*/
+    public static final String MATCH_SAVE_FAILED = "No se pudo guardar el partido";
+
+    /** Thrown when a saved match is damaged or comes from another version of the game*/
+    public static final String MATCH_LOAD_FAILED = "No se pudo abrir el partido guardado: el archivo está dañado o es de otra versión";
+
+    /** Thrown when a match is saved while it is not paused*/
+    public static final String SAVE_ONLY_PAUSED = "Pausa el partido para poder guardarlo";
 
     /**
      * Creates a new DOPOSoccer exception

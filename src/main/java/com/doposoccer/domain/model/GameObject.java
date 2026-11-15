@@ -1,9 +1,12 @@
 package com.doposoccer.domain.model;
+import java.io.Serializable;
 
 /**
  * Object on the field. Each object knows how to resolve its own collision with the ball.
  */
-public abstract class GameObject {
+public abstract class GameObject implements Serializable {
+
+    private static final long serialVersionUID = 1L;
 
     /** x coordinate of the center. */
     protected double x;

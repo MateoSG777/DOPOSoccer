@@ -15,7 +15,7 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <junit.version>5.10.2</junit.version>
         <jacoco.version>0.8.12</jacoco.version>
-        <main.class>com.doposoccer.DOPOSoccerGUI</main.class>
+        <main.class>com.doposoccer.presentation.DOPOSoccerGUI</main.class>
     </properties>
 
     <dependencies>
