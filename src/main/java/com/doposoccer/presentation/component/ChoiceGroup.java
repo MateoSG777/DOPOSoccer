@@ -64,6 +64,16 @@ public class ChoiceGroup {
     }
 
     /**
+     * Enables or disables every option of the group, for example while it does not apply
+     * @param enabled true to let the user choose
+     */
+    public void setEnabled(boolean enabled) {
+        for (int i = 0; i < buttons.length; i++) {
+            buttons[i].setEnabled(enabled);
+        }
+    }
+
+    /**
      * Returns the button of one option, so the screen can place it
      * @param index position of the option
      * @return the button of that option

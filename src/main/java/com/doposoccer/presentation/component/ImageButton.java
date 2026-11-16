@@ -31,6 +31,7 @@ public class ImageButton extends JButton {
 
     private final SpriteCache sprites;
     private boolean highlighted;
+    private double fontRatio = FONT_RATIO;
 
     /**
      * Creates a game-styled button
@@ -55,6 +56,15 @@ public class ImageButton extends JButton {
      */
     public void setHighlighted(boolean highlighted) {
         this.highlighted = highlighted;
+        repaint();
+    }
+
+    /**
+     * Changes the size of the text, for short symbols such as + and - that look small otherwise
+     * @param ratio text height as a fraction of the button height
+     */
+    public void setFontRatio(double ratio) {
+        this.fontRatio = ratio;
         repaint();
     }
 
@@ -103,7 +113,7 @@ public class ImageButton extends JButton {
     }
 
     private float fittedFontSize(Graphics2D g, int w, int h) {
-        float size = (float) (h * FONT_RATIO);
+        float size = (float) (h * fontRatio);
         int textWidth = g.getFontMetrics(Theme.font(size)).stringWidth(getText());
         double maxWidth = w * MAX_TEXT_WIDTH_RATIO;
         if (textWidth > maxWidth) {

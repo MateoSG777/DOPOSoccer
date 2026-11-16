@@ -41,7 +41,7 @@ public class BallPainter implements FigurePainter {
         int h = (int) (state.getHeight() * DRAW_SCALE);
         if (state.getGlow() != null) {
             int glow = (int) (w * GLOW_RATIO);
-            g.setColor(Theme.glowColor(state.getGlow()));
+            g.setColor(Theme.glowColor());
             g.fillOval(-glow / 2, -glow / 2, glow, glow);
         }
         BufferedImage ball = sprites.get(SpritePath.match(state.getSpriteKey()));

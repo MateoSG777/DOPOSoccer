@@ -69,7 +69,7 @@ public class PlayerPainter implements FigurePainter {
             return;
         }
         double size = Player.HEAD_RADIUS * 2 * AURA_RATIO;
-        g.setColor(Theme.glowColor(state.getGlow()));
+        g.setColor(Theme.glowColor());
         g.fill(new Ellipse2D.Double(-size / 2, headCenterY - size / 2, size, size));
     }
 

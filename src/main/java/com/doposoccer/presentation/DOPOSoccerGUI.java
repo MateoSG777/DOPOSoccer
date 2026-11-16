@@ -16,6 +16,7 @@ import com.doposoccer.presentation.screen.ConfigPanel;
 import com.doposoccer.presentation.screen.GamePanel;
 import com.doposoccer.presentation.screen.LoadPanel;
 import com.doposoccer.presentation.screen.MenuPanel;
+import com.doposoccer.presentation.screen.SettingsPanel;
 import com.doposoccer.presentation.screen.StorePanel;
 import javax.swing.JFrame;
 import javax.swing.JOptionPane;
@@ -31,7 +32,7 @@ import java.util.EnumMap;
 import java.util.Map;
 
 /**
- * Main window of DOPOSoccer. It navigates between the screens: menu, saved matches,
+ * Main window of DOPOSoccer. It navigates between the screens: menu, settings, saved matches,
  * store, configuration, character selection and match
  */
 public class DOPOSoccerGUI extends JFrame {
@@ -45,6 +46,7 @@ public class DOPOSoccerGUI extends JFrame {
     private static final String GAME = "game";
     private static final String STORE = "store";
     private static final String LOAD = "load";
+    private static final String SETTINGS = "settings";
     private static final Resolution MENU_RESOLUTION = Resolution.MEDIUM;
 
     private final DOPOSoccer game = new DOPOSoccer();
@@ -55,6 +57,7 @@ public class DOPOSoccerGUI extends JFrame {
     private final CharacterPanel characterPanel;
     private final StorePanel storePanel;
     private final LoadPanel loadPanel;
+    private final SettingsPanel settingsPanel;
     private GamePanel gamePanel;
 
     /** Creates the window with all the screens and shows the main menu*/
@@ -64,11 +67,13 @@ public class DOPOSoccerGUI extends JFrame {
         characterPanel = new CharacterPanel(this, sprites);
         storePanel = new StorePanel(this, sprites, game);
         loadPanel = new LoadPanel(this, sprites, game);
+        settingsPanel = new SettingsPanel(this, sprites);
         screens.add(new MenuPanel(this, sprites), MENU);
         screens.add(configPanel, CONFIG);
         screens.add(characterPanel, CHARACTERS);
         screens.add(storePanel, STORE);
         screens.add(loadPanel, LOAD);
+        screens.add(settingsPanel, SETTINGS);
         setContentPane(screens);
 
         setDefaultCloseOperation(WindowConstants.DO_NOTHING_ON_CLOSE);
@@ -102,6 +107,11 @@ public class DOPOSoccerGUI extends JFrame {
         cards.show(screens, LOAD);
     }
 
+    /** Shows the settings screen, where the resolution of the field is chosen*/
+    public void showSettings() {
+        cards.show(screens, SETTINGS);
+    }
+
     /** Shows the match configuration screen*/
     public void showConfig() {
         cards.show(screens, CONFIG);
@@ -119,7 +129,7 @@ public class DOPOSoccerGUI extends JFrame {
     public void play() {
         MatchBuilder builder = new MatchBuilder()
                 .mode(configPanel.getMode())
-                .resolution(configPanel.getResolution())
+                .resolution(settingsPanel.getResolution())
                 .rules(configPanel.getMatchType(), configPanel.getTarget())
                 .machine(configPanel.getMachine());
         TeamSide[] sides = TeamSide.values();

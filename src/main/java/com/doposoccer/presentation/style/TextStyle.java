@@ -73,8 +73,16 @@ public final class TextStyle {
      * @param baseline y of the text baseline
      */
     public void drawFromLeft(Graphics2D g, String text, double left, double baseline) {
-        double width = new TextLayout(Theme.withFallback(text, font).getIterator(),
-                g.getFontRenderContext()).getAdvance();
-        draw(g, text, left + width / 2.0, baseline);
+        draw(g, text, left + width(g, text) / 2.0, baseline);
+    }
+
+    /**
+     * Measures how wide a text is when drawn with this style
+     * @param g graphics to measure with
+     * @param text text to measure
+     * @return the width of the text
+     */
+    public double width(Graphics2D g, String text) {
+        return new TextLayout(Theme.withFallback(text, font).getIterator(), g.getFontRenderContext()).getAdvance();
     }
 }

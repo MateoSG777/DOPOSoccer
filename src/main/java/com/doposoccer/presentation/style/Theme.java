@@ -106,12 +106,11 @@ public final class Theme {
     }
 
     /**
-     * Looks up the translucent color of the glow of a power
-     * @param spriteKey key of the sprites of the country whose power shines
-     * @return the color of that country, half transparent
+     * Returns the translucent color of the glow of a power, the same yellow for every country
+     * @return the glow color, half transparent
      */
-    public static Color glowColor(String spriteKey) {
-        Color base = countryColor(spriteKey);
+    public static Color glowColor() {
+        Color base = color(Palette.GOLD);
         return new Color(base.getRed(), base.getGreen(), base.getBlue(), GLOW_ALPHA);
     }
 

@@ -30,6 +30,7 @@ public class Hud {
     private static final double SUDDEN_DEATH_Y = 170;
     private static final double SCORE_HEIGHT = 46;
     private static final double CLOCK_HEIGHT = 20;
+    private static final double NAME_MARGIN = 12;  // a long name such as "Máquina (Def)" stays inside the board
 
     private static final String KEYS = "J1: " + PlayerKeys.of(TeamSide.LEFT).getHint() + "      |      J2: "
             + PlayerKeys.of(TeamSide.RIGHT).getHint() + "      |      P: pausa";
@@ -60,7 +61,10 @@ public class Hud {
             Country country = config.getCountry(sides[i]);
             Theme.drawCountryImage(g, sprites.get(SpritePath.flag(country.getSpriteKey())), country,
                     tagX, BOARD_TOP + 8 + FLAG_SIZE / 2, FLAG_SIZE);
-            TextStyle.DETAIL.draw(g, config.getPlayerName(sides[i]), tagX, BOARD_TOP + 80);
+            String name = config.getPlayerName(sides[i]);
+            double half = TextStyle.DETAIL.width(g, name) / 2;
+            double nameX = Math.max(left + NAME_MARGIN + half, Math.min(left + BOARD_WIDTH - NAME_MARGIN - half, tagX));
+            TextStyle.DETAIL.draw(g, name, nameX, BOARD_TOP + 80);
             paintBar(g, sides[i], BARS_TOP, snapshot.getLife(sides[i]), Palette.LIFE);
             Palette powerColor = snapshot.getPower(sides[i]) >= 1 ? Palette.GOLD : Palette.POWER;
             paintBar(g, sides[i], BARS_TOP + BAR_HEIGHT + 4, snapshot.getPower(sides[i]), powerColor);

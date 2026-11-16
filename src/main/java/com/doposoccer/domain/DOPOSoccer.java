@@ -31,6 +31,7 @@ public class DOPOSoccer {
 
     /**
      * Creates the game with the saved matches of another place, as the unit tests use
+     * Creates the game with the saved matches of another place, as the unit tests use
      * @param slots slots of saved matches
      */
     public DOPOSoccer(MatchSlots slots) {

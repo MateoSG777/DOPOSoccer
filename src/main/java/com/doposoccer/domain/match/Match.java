@@ -217,7 +217,7 @@ public class Match implements GoalListener, Serializable {
         for (int i = 0; i < sides.length; i++) {
             Player player = players.get(sides[i]);
             life.put(sides[i], player.getLife() / player.getMaxLife());
-            power.put(sides[i], player.hasAura() ? 1 : player.getPower());
+            power.put(sides[i], player.getPower());
         }
         return new MatchSnapshot(scoreboard.copyOfGoals(), clock.format(), status,
                 config.getMatchType().isSuddenDeath(scoreboard, clock), states, life, power);

@@ -1,5 +1,6 @@
 package com.doposoccer.presentation.screen;
 import com.doposoccer.presentation.DOPOSoccerGUI;
+import com.doposoccer.presentation.component.GearButton;
 import com.doposoccer.presentation.component.ImageButton;
 import com.doposoccer.presentation.resource.SpriteCache;
 import com.doposoccer.presentation.resource.SpritePath;
@@ -10,7 +11,7 @@ import java.awt.Graphics;
 import javax.swing.Timer;
 
 /**
- * Main menu: game logo, a ball that keeps spinning in its place and the main buttons
+ * Main menu: game logo, a ball that keeps spinning in its place, the main buttons and the settings gear
  */
 public class MenuPanel extends BackgroundPanel {
 
@@ -25,6 +26,7 @@ public class MenuPanel extends BackgroundPanel {
     private final ImageButton loadButton;
     private final ImageButton storeButton;
     private final ImageButton exitButton;
+    private final GearButton settingsButton = new GearButton();
     private final long start = System.nanoTime();
 
     /**
@@ -43,10 +45,13 @@ public class MenuPanel extends BackgroundPanel {
         loadButton.addActionListener(e -> gui.showLoad());
         storeButton.addActionListener(e -> gui.showStore());
         exitButton.addActionListener(e -> gui.exit());
+        settingsButton.setToolTipText("Ajustes");
+        settingsButton.addActionListener(e -> gui.showSettings());
         add(playButton);
         add(loadButton);
         add(storeButton);
         add(exitButton);
+        add(settingsButton);
         new Timer(FRAME_MS, e -> spin()).start();
     }
 
@@ -63,6 +68,7 @@ public class MenuPanel extends BackgroundPanel {
         place(loadButton, 135, 382, 270, 86);
         place(storeButton, 135, 464, 270, 86);
         place(exitButton, 135, 546, 270, 86);
+        place(settingsButton, 940, 24, 60, 60);
     }
 
     /**

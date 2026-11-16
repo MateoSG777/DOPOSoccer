@@ -3,46 +3,42 @@ package com.doposoccer.presentation.screen;
 import com.doposoccer.domain.enums.GameMode;
 import com.doposoccer.domain.enums.MachineProfile;
 import com.doposoccer.domain.enums.MatchType;
-import com.doposoccer.domain.enums.Resolution;
 import com.doposoccer.presentation.DOPOSoccerGUI;
 import com.doposoccer.presentation.component.ChoiceGroup;
 import com.doposoccer.presentation.component.ImageButton;
+import com.doposoccer.presentation.component.Stepper;
 import com.doposoccer.presentation.resource.SpriteCache;
 import com.doposoccer.presentation.resource.SpritePath;
+import com.doposoccer.presentation.style.NumberStyle;
 import com.doposoccer.presentation.style.Palette;
 import com.doposoccer.presentation.style.TextStyle;
 import com.doposoccer.presentation.style.Theme;
 
-import javax.swing.JComboBox;
-import javax.swing.JSpinner;
-import javax.swing.SpinnerNumberModel;
-import java.awt.Font;
 import java.awt.Graphics2D;
 import java.awt.Graphics;
 
 /**
- * Match configuration screen: game mode, field resolution, type of match and its target.
+ * Match configuration screen: game mode, profile of the machine, type of match and its target.
  * It keeps the options chosen by the users. The profile of the machine
  * can only be chosen in Player vs Machine.
  */
 public class ConfigPanel extends BackgroundPanel {
 
-    private static final float INPUT_FONT = 26f;  // same visual weight as the button texts
-    private static final double MIN_FONT_SCALE = 0.5;  // keeps the text readable before the panel gets its size
-    private static final float COMBO_FONT_RATIO = 0.6f;  // the profile names are longer than a number
     private static final int DEFAULT_MODE = 0;  // player vs player
-    private static final int DEFAULT_RESOLUTION = 1;  // 1024 x 640: same size as the field, nothing is scaled
     private static final int DEFAULT_TYPE = 1;  // by goals
+    private static final double STEPPER_CENTER_X = 752;  // the target label and its buttons share this center
+    private static final double STEPPER_Y = 400;
+    private static final double STEP_BUTTON_WIDTH = 74;
+    private static final double STEP_BUTTON_HEIGHT = 66;
+    private static final double VALUE_HEIGHT = 56;
 
     private final GameMode[] modeOptions = GameMode.values();
-    private final Resolution[] resolutionOptions = Resolution.values();
     private final MatchType[] typeOptions = MatchType.values();
     private final MachineProfile[] profileOptions = MachineProfile.values();
     private final ChoiceGroup modes;
-    private final ChoiceGroup resolutions;
+    private final ChoiceGroup profiles;
     private final ChoiceGroup types;
-    private final JComboBox<String> profileBox = new JComboBox<>();
-    private final JSpinner targetSpinner = new JSpinner();
+    private final Stepper target;
     private final ImageButton backButton;
     private final ImageButton nextButton;
 
@@ -59,26 +55,21 @@ public class ConfigPanel extends BackgroundPanel {
             modeLabels[i] = modeOptions[i].getDisplayName();
         }
         modes = new ChoiceGroup(modeLabels, DEFAULT_MODE, sprites, this);
-        modes.setOnChange(() -> profileBox.setEnabled(getMode().hasMachine()));
-        String[] resolutionLabels = new String[resolutionOptions.length];
-        for (int i = 0; i < resolutionOptions.length; i++) {
-            resolutionLabels[i] = resolutionOptions[i].getDisplayName();
+        String[] profileLabels = new String[profileOptions.length];
+        for (int i = 0; i < profileOptions.length; i++) {
+            profileLabels[i] = profileOptions[i].getDisplayName();
         }
-        resolutions = new ChoiceGroup(resolutionLabels, DEFAULT_RESOLUTION, sprites, this);
+        profiles = new ChoiceGroup(profileLabels, 0, sprites, this);
+        profiles.setEnabled(false);
+        modes.setOnChange(() -> profiles.setEnabled(getMode().hasMachine()));
         String[] typeLabels = new String[typeOptions.length];
         for (int i = 0; i < typeOptions.length; i++) {
             typeLabels[i] = typeOptions[i].getDisplayName();
         }
+        target = new Stepper(sprites, this);
         types = new ChoiceGroup(typeLabels, DEFAULT_TYPE, sprites, this);
         types.setOnChange(() -> resetTarget(getMatchType()));
         resetTarget(getMatchType());
-
-        for (int i = 0; i < profileOptions.length; i++) {
-            profileBox.addItem(profileOptions[i].getDisplayName());
-        }
-        profileBox.setEnabled(false);
-        add(profileBox);
-        add(targetSpinner);
 
         backButton = new ImageButton("ATRÁS", sprites);
         nextButton = new ImageButton("SIGUIENTE", sprites);
@@ -89,22 +80,20 @@ public class ConfigPanel extends BackgroundPanel {
     }
 
     private void resetTarget(MatchType type) {
-        targetSpinner.setModel(new SpinnerNumberModel(type.getDefaultTarget(), MatchType.MIN_TARGET,
-                MatchType.MAX_TARGET, 1));
-        applyInputFont();
+        target.setRange(MatchType.MIN_TARGET, MatchType.MAX_TARGET, type.getDefaultTarget());
         repaint();
     }
 
     /** Places every control using design coordinates. */
     @Override
     public void doLayout() {
-        placeRow(modes, 150, 160, 280, 90, 290);
-        place(profileBox, 735, 185, 150, 44);
-        placeRow(resolutions, 150, 290, 230, 84, 245);
-        placeRow(types, 150, 420, 240, 86, 255);
-        place(targetSpinner, 730, 438, 140, 52);
+        placeRow(modes, 150, 152, 280, 84, 290);
+        placeRow(profiles, 150, 280, 170, 66, 184);
+        placeRow(types, 150, 400, 210, 84, 220);
+        place(target.getMinusButton(), STEPPER_CENTER_X - 115, STEPPER_Y + 9, STEP_BUTTON_WIDTH, STEP_BUTTON_HEIGHT);
+        place(target.getPlusButton(), STEPPER_CENTER_X + 115 - STEP_BUTTON_WIDTH, STEPPER_Y + 9,
+                STEP_BUTTON_WIDTH, STEP_BUTTON_HEIGHT);
         placeBottomButtons(backButton, nextButton);
-        applyInputFont();
     }
 
     private void placeRow(ChoiceGroup group, double x, double y, double width, double height, double step) {
@@ -113,14 +102,8 @@ public class ConfigPanel extends BackgroundPanel {
         }
     }
 
-    private void applyInputFont() {
-        Font font = Theme.font((float) (INPUT_FONT * Math.max(scale(), MIN_FONT_SCALE)));
-        ((JSpinner.DefaultEditor) targetSpinner.getEditor()).getTextField().setFont(font);
-        profileBox.setFont(font.deriveFont(font.getSize2D() * COMBO_FONT_RATIO));
-    }
-
     /**
-     * Paints the background, the title and the section names.
+     * Paints the background, the title, the section names and the target number.
      *
      * @param g graphics given by Swing
      */
@@ -131,11 +114,12 @@ public class ConfigPanel extends BackgroundPanel {
         g2.setColor(Theme.color(Palette.SHADE));
         g2.fillRoundRect(120, 100, 784, 420, 30, 30);
         TextStyle.TITLE.draw(g2, "CONFIGURACIÓN DEL PARTIDO", DESIGN_WIDTH / 2, 70);
-        TextStyle.SECTION.drawFromLeft(g2, "MODALIDAD", 150, 148);
-        TextStyle.SECTION.drawFromLeft(g2, "MÁQUINA", 735, 172);
-        TextStyle.SECTION.drawFromLeft(g2, "RESOLUCIÓN DE LA CANCHA", 150, 280);
-        TextStyle.SECTION.drawFromLeft(g2, "TIPO DE PARTIDO", 150, 410);
-        TextStyle.SECTION.drawFromLeft(g2, getMatchType().getTargetLabel().toUpperCase(), 730, 425);
+        TextStyle.SECTION.drawFromLeft(g2, "MODALIDAD", 150, 142);
+        TextStyle.SECTION.drawFromLeft(g2, "MÁQUINA", 150, 270);
+        TextStyle.SECTION.drawFromLeft(g2, "TIPO DE PARTIDO", 150, 390);
+        TextStyle.SECTION.draw(g2, getMatchType().getTargetLabel().toUpperCase(), STEPPER_CENTER_X, 390);
+        NumberStyle.BIG.draw(g2, sprites, String.valueOf(target.getValue()), STEPPER_CENTER_X,
+                STEPPER_Y + 42, VALUE_HEIGHT);
         g2.dispose();
     }
 
@@ -146,15 +130,6 @@ public class ConfigPanel extends BackgroundPanel {
      */
     public GameMode getMode() {
         return modeOptions[modes.getSelectedIndex()];
-    }
-
-    /**
-     * Returns the chosen field resolution.
-     *
-     * @return the chosen resolution
-     */
-    public Resolution getResolution() {
-        return resolutionOptions[resolutions.getSelectedIndex()];
     }
 
     /**
@@ -172,7 +147,7 @@ public class ConfigPanel extends BackgroundPanel {
      * @return the chosen target
      */
     public int getTarget() {
-        return (Integer) targetSpinner.getValue();
+        return target.getValue();
     }
 
     /**
@@ -181,6 +156,6 @@ public class ConfigPanel extends BackgroundPanel {
      * @return the chosen profile
      */
     public MachineProfile getMachine() {
-        return profileOptions[profileBox.getSelectedIndex()];
+        return profileOptions[profiles.getSelectedIndex()];
     }
 }

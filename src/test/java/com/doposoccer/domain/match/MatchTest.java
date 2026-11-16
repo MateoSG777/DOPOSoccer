@@ -105,6 +105,18 @@ class MatchTest {
         assertEquals(MatchStatus.PLAYING, match.getStatus());
     }
 
+    /** The power bar should show empty right after the power is activated, and charge again. */
+    @Test
+    void powerBarShouldRestartAfterActivating() throws DOPOSoccerException {
+        Match match = newMatch(MatchType.TIMED, 2);
+        match.getPlayer(TeamSide.LEFT).chargePower(1);
+        match.getPlayer(TeamSide.LEFT).activatePower();
+        assertTrue(match.getPlayer(TeamSide.LEFT).hasAura());
+        assertEquals(0, match.snapshot().getPower(TeamSide.LEFT), 1e-9);
+        play(match, 2);
+        assertTrue(match.snapshot().getPower(TeamSide.LEFT) > 0);
+    }
+
     /** Should not pause a finished match. */
     @Test
     void shouldNotPauseAFinishedMatch() throws DOPOSoccerException {
